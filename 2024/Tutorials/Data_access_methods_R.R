@@ -3,6 +3,9 @@
 ##    https://inbo.github.io/tutorials/tutorials/spatial_wfs_services/
 ##    https://eblondel.github.io/ows4R/articles/wcs.html
 
+  ## Install packages
+  install.packages(c("ows4R", "httr", "tidyverse", "sf"))
+  
   ## Load relevant libraries
   rm(list = ls())
   library(ows4R); library(httr); library(tidyverse); library(sf);
@@ -56,9 +59,12 @@
 ## Online resources:
     ## https://help.aodn.org.au/downloading-data-from-servers/opendap/
     ## https://rdrr.io/github/bocinsky/thredds/f/README.md - thredds library to be installed from here
-
+    
+    ## Install packages
+    install.packages("ncdf4")
+    
     ## Load relevant libraries
-    # devtools::install_github("bocinsky/thredds")
+    # remotes::install_github("bocinsky/thredds")
     library(ncdf4); library(thredds); 
   
   ## Locate and use the OPeNDAP URL of a NetCDF file
@@ -114,6 +120,9 @@
     ## https://github.com/apache/arrow/blob/main/r/cheatsheet/arrow-cheatsheet.pdf ## for reading Parquet files
     ## https://bioconductor.org/packages/release/bioc/vignettes/Rarr/inst/doc/Rarr.html ## for reading Zarr files. Installed via https://www.bioconductor.org/packages/release/bioc/html/Rarr.html. More Zarr-related resources https://www.r-bloggers.com/2022/09/reading-zarr-files-with-r-package-stars/
     
+    ## Install packages
+    install.packages(c("aws.s3", "arrow", "Rarr"))
+      
     library(aws.s3); library(dplyr); library(arrow); library(Rarr);
     bucket_exists(bucket = "s3://imos-data/", region = "ap-southeast-2") ## Most of AODN data is stored on Amazon Web Services S3 object storage (AWS S3). http://data.aodn.org.au/
     
@@ -126,7 +135,8 @@
       ## Individual file
       save_object(object = "IMOS/AATAMS/satellite_tagging/ATF_Location_QC_DM/wd15_dm.zip", bucket = "s3://imos-data/", region = "ap-southeast-2", file = "~/Downloads/wd15_dm.zip")
       ## All in subdirectory
-      keys <- get_bucket_df(bucket = "s3://imos-data/", region = "ap-southeast-2", prefix="IMOS/AATAMS/satellite_tagging/MEOP_QC_CTD") %>% as_tibble(); keys <- keys$Key ## List all files in subdirectory using the `prefix` argument. Potential for filtering by LastModified field
+      keys <- get_bucket_df(bucket = "s3://imos-data/", region = "ap-southeast-2", prefix="IMOS/AATAMS/satellite_tagging/MEOP_QC_CTD") %>% as_tibble() 
+      keys <- keys$Key ## List all files in subdirectory using the `prefix` argument. Potential for filtering by LastModified field
       for (i in 1:length(keys)){
           key <- keys[i]; 
           save_object(object = key, bucket = "s3://imos-data/", region = "ap-southeast-2", file = paste0("~/Downloads/", basename(key)))
@@ -149,6 +159,10 @@
   
 ## -------------------------------------------------------------------------------------------------------- ## 
 ## 5. Interacting with Zarr datasets - not available yet through IMOS
+  
+  # Install packages
+  install.packages("paws.storage")
+  
   # Working example
   s3_address <- "https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.4/idr0076A/10501752.zarr/0"
   s3_client <- paws.storage::s3(
@@ -211,4 +225,10 @@
     )
     zarr_overview(s3_address, s3_client = s3_client)
     lat <- read_zarr_array(s3_address, s3_client = s3_client)                
-  image(z2[1, , ], axes = F); axis(1, at = seq(0, 359, 20)/360, labels = seq(lon[1], lon[359], 20), axis(2, at = seq(0, 1, 30/180)/180, labels = seq(lat[1], 90, 30)))
+    image(z2[1, , ], axes = F) 
+    axis(1, at = seq(0, 359, 20)/360, labels = seq(lon[1], lon[359], 20), axis(2, at = seq(0, 1, 30/180)/180, labels = seq(lat[1], 90, 30)))
+    
+    
+    
+    
+    
