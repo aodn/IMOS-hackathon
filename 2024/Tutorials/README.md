@@ -1,2 +1,2 @@
-# aodn-hackathon-2024
-Code emerging from the 2024 AODN Hackathon
+# Tutorial notebooks
+Notebooks for tutorials presented at the 2024 AODN Hackathon.
