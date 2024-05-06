@@ -2,7 +2,7 @@
 
 <br>
 
-![](banner1.png)
+![](images/banner1.png)
 
 <br>
 
@@ -30,11 +30,11 @@ The key desirable outcomes of this tool may include:
 A potential example dashboard could look something like this:
 
 
-![](Picture1.png)
+![](images/Picture1.png)
 
 
 
 <br><br>
 
-![](banner2.png)
+![](images/banner2.png)
 
