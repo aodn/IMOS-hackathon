@@ -18,8 +18,11 @@ The **`remora`** R package was developed by a multi-institutional team led by Fa
 **`remora`** is an R package enabling the integration of animal acoustic telemetry data with oceanographic observations collected by ocean observing programs. It includes functions for:
 
 -   Interactively exploring animal movements in space and time from acoustic telemetry data
+
 -   Performing robust quality-control of acoustic telemetry data as described in [Hoenner et al. 2018](https://doi.org/10.1038/sdata.2017.206)
+
 -   Identifying available satellite-derived and sub-surface *in situ* oceanographic datasets coincident and collocated with the animal movement data, based on regional Ocean Observing Systems
+
 -   Extracting and appending these environmental data to animal movement data
 
 Whilst the functions in remora were primarily developed to work with acoustic telemetry data, the environmental data extraction and integration functionalities will work with other spatio-temporal ecological datasets (eg. satellite telemetry, species sightings records, fisheries catch records).
@@ -27,8 +30,6 @@ Whilst the functions in remora were primarily developed to work with acoustic te
 ![](images/Workflow1.png)
 
 In this tutorial we will work specifically with the `extractEnv()` function.
-
-<br>
 
 ------------------------------------------------------------------------
 
@@ -92,13 +93,9 @@ div.blue { background-color:#e6f0ff; border-radius: 5px; padding: 20px;}
 -   **nrt**: should Near-Real Time data be used if Delayed Mode data is not available?
 :::
 
-<br><br>
-
 The `extractEnv()` function was designed to take in minimal input data (i.e., latitude, longitude, date) to be able to extract and append user defined environmental data stored and maintained on the AODN THREDDS server. In most cases, delayed-mode datasets are prefered, but if DM data is not available for the time period, Near-Real Time data can be accessed instead. Although a lot of the other functions in this package were created specifically to handle Acoustic Telemetry datasets, this function was generalised so it can be used for other datasets that require temporally and spatially variable environmental data exraction.
 
 ![](images/workflow_extractEnv.png)
-
-<br>
 
 ------------------------------------------------------------------------
 
@@ -139,8 +136,6 @@ fish_occurrence %>%
 
 ```
 
-<br>
-
 Using the example `fish_occurrence` data, lets extract sea surface temperature data to explore the thermal niches of multiple fish species:
 
 ```{r, warning = F, message = F, eval = F}
@@ -160,8 +155,6 @@ fish_env <-
              .parallel = F)
 
 ```
-
-<br>
 
 #### Visualising data appended SST data for occurrences
 
@@ -216,15 +209,11 @@ b <-
 
 ```
 
-<br><br>
-
 ------------------------------------------------------------------------
 
 ### Turtles and currents
 
 In the second example, we will use the `extractEnv()` function to append current data to animal tracking datasets. Here we will use data from GPS CTD tags deployed on Flatback Turtles (*Natator depressus*) from a key rookery on Gurriba Island in the Crocodile Islands Group (Milingimbi) in the Northern Territory. Female turtles were tagged once they finished nesting on the island, and conducted their post-nesting migratinos to key foraging grounds across Northern Australia. The tags collected profile data on temperature and salinity as the turtles dived, and transmitted data via FastLock GPS.
-
-<br>
 
 ![](images/FBprofile.png)
 
@@ -295,8 +284,6 @@ In addition to this, the function also uses these variables to calculate current
 turtle_curr <- read_csv("data/turtle_curr.csv", show_col_types = FALSE)
 
 ```
-
-<br><br>
 
 #### Visualise the extracted data and the pulled GSLA data
 
