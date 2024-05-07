@@ -1,2 +1,10 @@
 # IMOS MLD-GUI code
-Code emerging from the 2024 IMOS Hackathon
+
+## Setup
+### Environment
+
+The AODN-Hackathon-MLD-GUI environment was used for developing. The packages installed are contained in the requirements.txr file. 
+
+## Code
+
+
