@@ -138,7 +138,8 @@
     
     ## Downloads
       ## Individual file
-      save_object(object = "IMOS/AATAMS/satellite_tagging/ATF_Location_QC_DM/wd15_dm.zip", bucket = "s3://imos-data/", region = "ap-southeast-2", file = "~/Downloads/wd15_dm.zip")
+      save_object(object = "IMOS/AATAMS/satellite_tagging/ATF_Location_QC_DM/wd15_dm.zip", bucket = "s3://imos-data/", 
+                  region = "ap-southeast-2", file = "~/Downloads/wd15_dm.zip")
       ## All in subdirectory
       keys <- get_bucket_df(bucket = "s3://imos-data/", region = "ap-southeast-2", prefix="IMOS/AATAMS/satellite_tagging/MEOP_QC_CTD") %>% as_tibble() 
       keys <- keys$Key ## List all files in subdirectory using the `prefix` argument. Potential for filtering by LastModified field
