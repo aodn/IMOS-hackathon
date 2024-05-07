@@ -36,6 +36,13 @@ temp <- ncvar_get(R_MAI090, "TEMP_INTERP")
 temp_90 <- ncvar_get(R_MAI090, "TEMP_PER90")
 mhw_event_duration <- ncvar_get(R_MAI090, "MHW_EVENT_DURATION")
 
+# Variable ‘TIME’ above contains numeric values that correspond to days since
+# 1950. It is better to convert these numeric values to a date type variable. In R,
+# POSIXct is a data type used to represent date and time values. It stands for
+# "Portable Operating System Interface for Unix - Calendar Time." It is a specific
+# class within the POSIX family of classes that represents date and time values
+# as the number of seconds since the Unix epoch (January 1, 1970, 00:00:00 UTC).
+
 # get TIME and convert to R time
 TIME <- R_MAI090$dim$TIME[10]
 TIME_R <- as.POSIXct((as.numeric(unlist(TIME)) - 7305)*86400, origin = "1970-01-01", tz = "UTC")
