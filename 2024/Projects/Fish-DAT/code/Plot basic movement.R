@@ -5,7 +5,7 @@
 rm(list=ls()) # to clear workspace
 
 # Set working directory
-setwd("~/Documents/GitHub/IMOS-hackathon/2024/Projects/Fish-DAT/data/") # set manually to your own working directory
+setwd("~/Documents/GitHub/IMOS-hackathon/2024/Projects/Fish-DAT/data/kingfish/") # set manually to your own working directory
 
 # Load the data
 library(data.table)
@@ -15,12 +15,7 @@ track <- as.data.frame(track)
 
 library(dplyr)
 
-#Download satellite map
-library("ggmap")
-library(rstudioapi)
-register_google(key = "AIzaSyCXpUm03UmbL-PFbEIOEWvg4sfeN17rewQ")
-# For close-up of track:
-esri_sat <- get_map(location = c(lon = mean(track$Longitude), lat = mean(track$Latitude)), zoom = 6, maptype = "satellite", source = "google")
+## Create a spatial map
 
 #Create a custom color scale
 monthly_colour_palette <- read.csv("~/Documents/GitHub/IMOS-hackathon/2024/Projects/Fish-DAT/data/monthly_colour_palette.csv", header=TRUE); head(monthly_colour_palette)
