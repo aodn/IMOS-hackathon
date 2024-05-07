@@ -20,6 +20,7 @@ photo <- "kingfish_test.jpg"
 
 #Create a custom color scale
 monthly_colour_palette <- read.csv("data/monthly_colour_palette.csv", header=TRUE)
+myColors <- unique(monthly_colour_palette$colour)
 myColors <- setNames(myColors, unique(monthly_colour_palette$month))
 colScale <- scale_colour_manual(name = "Month:", values = myColors) 
 
