@@ -1,0 +1,5 @@
+libnetcdf==0.0.1
+xarray==2024.3.0
+numpy==1.26.4
+netcdf4==1.6.5
+h5py==3.11.0
