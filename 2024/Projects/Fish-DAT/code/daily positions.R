@@ -9,11 +9,11 @@
 rm(list=ls()) # to clear workspace
 
 # Set working directory
-setwd("~/Dropbox/Project Kingfish/Shiny App Files/Data/") # set manually to your own working directory
+setwd("~/Documents/GitHub/IMOS-hackathon/2024/Projects/Fish-DAT/data/") # set manually to your own working directory
 
 # Load the data
 library(data.table)
-dat <- fread("Sydney/227151/227151-15-GPE3.csv"); head(dat)
+dat <- fread("227151/227151-15-GPE3.csv"); head(dat)
 dat <- as.data.frame(dat)
 
 # Do time conversion and extract Date and Time as separate columns
@@ -36,13 +36,13 @@ track
 
 #Replacing first and last location with know deployment and pop-off location
 #load the masterfile with the known release (deployment) and detachments (pop-off) locations
-rawdata <- fread("MiniPAT_masterfile.csv")
+rawdata <- fread("HackathonMetadata.csv")
 #Replacing deployment longitude and latitude
-track$Latitude[1] <- rawdata$Release_Latitude[1]
-track$Longitude[1] < rawdata$Release_Longitude[1]
+track$Latitude[1] <- rawdata$Deployment_Lat[1]
+track$Longitude[1] < rawdata$Deployment_Lon[1]
 #Replacing detachment longitude and latitude (need to check what row of each data you are transferring over)
-track$Latitude[86] <- rawdata$Detachment_Latitude[1]
-track$Longitude[86] < rawdata$Detachment_Longitude[1] #not sure why this line of code isn't working
+track$Latitude[86] <- rawdata$Detachment_Lat[1]
+track$Longitude[86] < rawdata$Detachment_Lon[1] #not sure why this line of code isn't working
 
 #####
 
@@ -52,6 +52,6 @@ track$month <- format(as.POSIXct(track$Date,format="%Y-%m-%d"),"%b"); head(track
 
 #Save sample data
 # I only set working directory again because I couldn't figure out how to make write.csv go to the correct folder
-setwd("~/Dropbox/Project Kingfish/Shiny App Files/Data/Sydney/227151/") 
+setwd("~/Documents/GitHub/IMOS-hackathon/2024/Projects/Fish-DAT/data/")
 
-write.csv(track,paste0(unique(track$Ptt),"","_daily-positions.csv"), row.names = F)
+write.csv(track,paste0(unique(track$Ptt),"/",unique(track$Ptt),"","_daily-positions.csv"), row.names=F)
