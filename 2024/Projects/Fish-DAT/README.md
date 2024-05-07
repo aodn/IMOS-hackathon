@@ -34,3 +34,13 @@ A potential example dashboard could look something like this:
   -   `app.R` = basic shiny app the original team
   -   `daily-positions.R` = uses raw data from the `data/xxxxxx` folder (GPE3) to create a `xxxxxx-daily-positions.csv`
   -   `Plot basic movements.R` = loads in 'daily positions' to estimate basic movement metrics
+  
+  
+  
+  
+### Tasks
+
+
+<br>
+
+![](images/IMG_4949.jpeg)
