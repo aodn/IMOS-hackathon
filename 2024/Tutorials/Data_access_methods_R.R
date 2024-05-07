@@ -53,7 +53,6 @@
     dat_fbb <- read_sf(request); dim(dat_fbb); head(dat_fbb)    
     
     
-    
 ## -------------------------------------------------------------------------------------------------------- ## 
 ## 2. Interacting with THREDDS server - Access to single NetCDF file, plus list files for scripting
 ## Online resources:
@@ -121,7 +120,13 @@
     ## https://bioconductor.org/packages/release/bioc/vignettes/Rarr/inst/doc/Rarr.html ## for reading Zarr files. Installed via https://www.bioconductor.org/packages/release/bioc/html/Rarr.html. More Zarr-related resources https://www.r-bloggers.com/2022/09/reading-zarr-files-with-r-package-stars/
     
     ## Install packages
-    install.packages(c("aws.s3", "arrow", "Rarr"))
+    install.packages(c("aws.s3", "arrow"))
+    
+    if (!require("BiocManager", quietly = TRUE))
+      install.packages("BiocManager")
+    
+    ## Install Rarr
+    BiocManager::install("Rarr")
       
     library(aws.s3); library(dplyr); library(arrow); library(Rarr);
     bucket_exists(bucket = "s3://imos-data/", region = "ap-southeast-2") ## Most of AODN data is stored on Amazon Web Services S3 object storage (AWS S3). http://data.aodn.org.au/
@@ -133,13 +138,14 @@
     
     ## Downloads
       ## Individual file
-      save_object(object = "IMOS/AATAMS/satellite_tagging/ATF_Location_QC_DM/wd15_dm.zip", bucket = "s3://imos-data/", region = "ap-southeast-2", file = "~/Downloads/wd15_dm.zip")
+      save_object(object = "IMOS/AATAMS/satellite_tagging/ATF_Location_QC_DM/wd15_dm.zip", bucket = "s3://imos-data/", 
+                  region = "ap-southeast-2", file = "~/Desktop/ATF_Location/wd15_dm.zip")
       ## All in subdirectory
       keys <- get_bucket_df(bucket = "s3://imos-data/", region = "ap-southeast-2", prefix="IMOS/AATAMS/satellite_tagging/MEOP_QC_CTD") %>% as_tibble() 
       keys <- keys$Key ## List all files in subdirectory using the `prefix` argument. Potential for filtering by LastModified field
       for (i in 1:length(keys)){
           key <- keys[i]; 
-          save_object(object = key, bucket = "s3://imos-data/", region = "ap-southeast-2", file = paste0("~/Downloads/", basename(key)))
+          save_object(object = key, bucket = "s3://imos-data/", region = "ap-southeast-2", file = paste0("~/Desktop/ATF_Location/", basename(key)))
       }
 
 
@@ -150,10 +156,10 @@
 ## 4. Interacting with Parquet datasets - not available yet through IMOS
   get_bucket_df(bucket = "s3://gbr-dms-data-public/", region = "ap-southeast-2", max = 200) %>% as_tibble()
   dat <- save_object(object = "abs-lgas-2021/data.parquet/part.0.parquet", bucket = "s3://gbr-dms-data-public/", region = "ap-southeast-2") ## Not working
-  save_object(object = "abs-lgas-2021/data.parquet/part.0.parquet", bucket = "s3://gbr-dms-data-public/", region = "ap-southeast-2", file = '~/Downloads/abs.parquet') ## Download Parquet file on local machine
+  save_object(object = "abs-lgas-2021/data.parquet/part.0.parquet", bucket = "s3://gbr-dms-data-public/", region = "ap-southeast-2", file = '~/Desktop/parqet_example/abs.parquet') ## Download Parquet file on local machine
   dat <- arrow::read_parquet("s3://gbr-dms-data-public/abs-lgas-2021/data.parquet/part.0.parquet") ## Read S3 Parquet file directly
   
-  
+  dat
 
 
   
