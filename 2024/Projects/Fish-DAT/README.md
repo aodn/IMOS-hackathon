@@ -30,6 +30,17 @@ A potential example dashboard could look something like this:
 
 ### What's in this folder
 
--   `app.R` = basic shiny app the original team
+- Code Folder:
+  -   `app.R` = basic shiny app the original team
+  -   `daily-positions.R` = uses raw data from the `data/xxxxxx` folder (GPE3) to create a `xxxxxx-daily-positions.csv`
+  -   `Plot basic movements.R` = loads in 'daily positions' to estimate basic movement metrics
+  
+  
+  
+  
+### Tasks
 
--   `daily-positions.R` = uses raw data from the `data/xxxxxx` folder (GPE3) to create a `xxxxxx-daily-positions.csv`
+
+<br>
+
+![](images/IMG_4949.jpeg)
