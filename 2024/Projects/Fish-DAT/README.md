@@ -9,10 +9,10 @@
 Tracking studies offer important insights into the behaviour and movement patterns of important fishery species. The data obtained using 
 satellite tags (e.g., PSATs, GPS, ARGOS) can reveal patterns of species movements as they move between coastal and offshore habitats, 
 delineating the boundaries of their ecological niches. Additionally, movement data can elucidate the critical overlap between fish 
-migration routes and fishing activities. One remaining gap in these analyses is the integration of oceanographic data into satellite tracking
-data. 
+migration routes and fishing activities. One remaining gap in these analyses is the integration of oceanographic observations with satellite tracking
+datasets to understand environmental influences on habitat use patterns. 
 
-This project seeks to develop R-based and tools to enable interactive movement analysis, and more importantly, integrating IMOS oceanographic
+This project seeks to develop R-based tools to enable interactive movement analysis, and more importantly, integrating IMOS oceanographic
 datasets with movement data. 
 
 
