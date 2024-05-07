@@ -53,7 +53,6 @@
     dat_fbb <- read_sf(request); dim(dat_fbb); head(dat_fbb)    
     
     
-    
 ## -------------------------------------------------------------------------------------------------------- ## 
 ## 2. Interacting with THREDDS server - Access to single NetCDF file, plus list files for scripting
 ## Online resources:
@@ -121,7 +120,13 @@
     ## https://bioconductor.org/packages/release/bioc/vignettes/Rarr/inst/doc/Rarr.html ## for reading Zarr files. Installed via https://www.bioconductor.org/packages/release/bioc/html/Rarr.html. More Zarr-related resources https://www.r-bloggers.com/2022/09/reading-zarr-files-with-r-package-stars/
     
     ## Install packages
-    install.packages(c("aws.s3", "arrow", "Rarr"))
+    install.packages(c("aws.s3", "arrow"))
+    
+    if (!require("BiocManager", quietly = TRUE))
+      install.packages("BiocManager")
+    
+    ## Install Rarr
+    BiocManager::install("Rarr")
       
     library(aws.s3); library(dplyr); library(arrow); library(Rarr);
     bucket_exists(bucket = "s3://imos-data/", region = "ap-southeast-2") ## Most of AODN data is stored on Amazon Web Services S3 object storage (AWS S3). http://data.aodn.org.au/
