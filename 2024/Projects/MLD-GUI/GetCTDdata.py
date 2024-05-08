@@ -28,7 +28,7 @@ import PickleStuff as ps # functions to save/load pickle files
 # sites = ['NRSNSI', 'CH050', 'CH070', 'CH100', 'SYD100', 'SYD140', 'PH100', 'BMP070', 'BMP090', 'BMP120', 'NRSMAI', 'NRSKAI', 'NRSROT', 'NRSYON', 'WATR50']
 sites = ['PH100']
 
-CTDdata = {}
+CTDdata_TEMP = {}
 for s in sites:
 
     # get correct link for downloading data
@@ -42,9 +42,27 @@ for s in sites:
     print(link)
     
     # get data
-    CTDdata[s] = agg.AggregateProfiles(link,'TEMP')
+    CTDdata_TEMP[s] = agg.AggregateProfiles(link,'TEMP')
     
+
+CTDdata_PSAL = {}
+for s in sites:
+
+    # get correct link for downloading data
+    link = 0
+    if 'NRS' in s:
+        link = 'https://thredds.aodn.org.au/thredds/catalog/IMOS/ANMN/NRS/' + s + '/Biogeochem_profiles/catalog.html'
+    if s == 'WATR50':
+        link = 'https://thredds.aodn.org.au/thredds/catalog/IMOS/ANMN/WA/' + s + '/Biogeochem_profiles/catalog.html'
+    if link == 0:
+        link = 'https://thredds.aodn.org.au/thredds/catalog/IMOS/ANMN/NSW/' + s + '/Biogeochem_profiles/catalog.html'
+    print(link)
+    
+    # get data
+    CTDdata_PSAL[s] = agg.AggregateProfiles(link,'PSAL')
+
         
 # %% save data as a pickle
 
-ps.PickleSave(account + r'\Data\PH100CTD.pickle',CTDdata)
+ps.PickleSave('Data\\PH100CTD_TEMP.pickle', CTDdata_TEMP)
+ps.PickleSave('Data\\PH100CTD_PSAL.pickle', CTDdata_PSAL)
