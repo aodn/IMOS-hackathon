@@ -37,15 +37,31 @@ for s in sites:
     link = 0
     if 'NRS' in s:
         link = 'https://thredds.aodn.org.au/thredds/catalog/IMOS/ANMN/NRS/' + s + '/Biogeochem_profiles/catalog.html'
-    if s == 'WATR50':
-        link = 'https://thredds.aodn.org.au/thredds/catalog/IMOS/ANMN/WA/' + s + '/Biogeochem_profiles/catalog.html'
     if link == 0:
         link = 'https://thredds.aodn.org.au/thredds/catalog/IMOS/ANMN/NSW/' + s + '/Biogeochem_profiles/catalog.html'
     print(link)
     
     # get data
+<<<<<<< Updated upstream
     CTDdata[s] = agg.AggregateProfiles(link,'TEMP')
         
+=======
+    CTDdata_TEMP[s] = agg.AggregateProfiles(link,'TEMP')
+    
+CTDdata_PSAL = {}
+for s in sites:
+
+    # get correct link for downloading data
+    link = 0
+    if 'NRS' in s:
+        link = 'https://thredds.aodn.org.au/thredds/catalog/IMOS/ANMN/NRS/' + s + '/Biogeochem_profiles/catalog.html'
+    if link == 0:
+        link = 'https://thredds.aodn.org.au/thredds/catalog/IMOS/ANMN/NSW/' + s + '/Biogeochem_profiles/catalog.html'
+    print(link)
+    
+    # get data
+    CTDdata_PSAL[s] = agg.AggregateProfiles(link,'PSAL')
+>>>>>>> Stashed changes
         
 # %% save data as a pickle
 
