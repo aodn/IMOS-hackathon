@@ -11,10 +11,6 @@ setwd("~/Documents/Projects/dev/IMOS-hackathon-1")
 # Get for one animal
 basedir <- "2024/Projects/Fish-DAT/data/47622"
 
-
-
-
-
 calculate_daily_metrics <- function(basedir) {
   # Load the data
   filename <- dir(file.path(basedir), pattern = "daily-positions.csv", full.names = TRUE)
@@ -26,9 +22,8 @@ out <- d
 
 # Load hi-res series data
 
-
-if (file.exists(file.path(basedir, "Series.csv"))) {
-  filename <- dir(file.path(basedir), pattern = "Series.csv", full.names = TRUE)
+filename <- dir(file.path(basedir), pattern = "Series.csv", full.names = TRUE)
+if (is.null(filename) == FALSE ) {
   series_dat <- read_csv(filename) %>% 
     mutate(Day = dmy(Day)) %>% 
     group_by(Ptt, Day) %>% 
@@ -54,11 +49,11 @@ if (file.exists(file.path(basedir, "Series.csv"))) {
 
 # IF animal doesn't have Series.csv use the summary data
 # use DailyData.csv
-
+filename <- dir(file.path(basedir), pattern = "DailyData.csv", full.names = TRUE)
 if(
-  file.exists(file.path(basedir, "DailyData.csv"))
+  is.null(filename) == FALSE
 ) {
-  filename <- dir(file.path(basedir), pattern = "DailyData.csv", full.names = TRUE)
+
   daily_dat <- read_csv(filename) %>% 
     mutate(Day = mdy(Date)) %>% 
     select(Ptt, Day, MinTemp, MaxTemp, MinDepth, MaxDepth); 
@@ -73,11 +68,12 @@ if(
 }
 
 
+filename <- dir(file.path(basedir), pattern = "PDTs.csv", full.names = TRUE)
 if (
-  file.exists(file.path(basedir, "PDTs.csv"))
+  is.null(filename) == FALSE
 ) {
   # use PDTs.csv
-  filename <- dir(file.path(basedir), pattern = "PDTs.csv", full.names = TRUE)
+
   pdt_dat <- read_csv(filename) %>% 
     # split Date by " " and create string of second element + first element
     mutate(Date = str_split(Date, pattern = " ")) %>% 
@@ -100,3 +96,8 @@ if (
 
 return(out)
 }
+
+
+output <- calculate_daily_metrics(basedir)
+output
+glimpse(output)
