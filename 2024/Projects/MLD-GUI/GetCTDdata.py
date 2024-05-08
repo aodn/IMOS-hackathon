@@ -38,7 +38,6 @@ for s in sites:
     if link == 0:
         link = 'https://thredds.aodn.org.au/thredds/catalog/IMOS/ANMN/NSW/' + s + '/Biogeochem_profiles/catalog.html'
     print(link)
-    
     # get data
     CTDdata_TEMP[s] = agg.AggregateProfiles(link,'TEMP')
     
@@ -57,7 +56,7 @@ for s in sites:
     
     # get data
     CTDdata_PSAL[s] = agg.AggregateProfiles(link,'PSAL')
-        
+
 # %% save data as a pickle
 
 ps.PickleSave('Data\\PH100CTD_TEMP.pickle', CTDdata_TEMP)
