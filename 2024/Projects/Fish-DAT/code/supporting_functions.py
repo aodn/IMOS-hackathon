@@ -8,13 +8,13 @@ import xarray as xr
 
 # Defining functions
 # Extracting bounding box from GPE3 necdf files
-def bb_from_gpe3(filename: str, tag_id: str) -> pd.DataFrame:
+def bb_from_gpe3(filename: str, tag_id: str) -> dict:
     '''
     Inputs:
       - filename - (string) Location of the GPE3 netcdf file
       - tag_id - (integer) Unique tag ID
     Outputs:
-      - bb_df - (pandas DataFrame) Bounding box and tag ID
+      - bb_df - (dict) Bounding box and tag ID
     '''
 
     # Open dataset
@@ -23,29 +23,27 @@ def bb_from_gpe3(filename: str, tag_id: str) -> pd.DataFrame:
     # Store in dictionary
     bb_dict = {
         'PTT': tag_id,  # Extracting bounding box (max and min coordinates)
-        'min_lat': ds.coords['latitude'].min().values,
-        'max_lat': ds.coords['latitude'].max().values,
-        'min_lon': ds.coords['longitude'].min().values,
-        'max_lon': ds.coords['longitude'].max().values,
+        'min_lat': float(ds.coords['latitude'].min()),
+        'max_lat': float(ds.coords['latitude'].max()),
+        'min_lon': float(ds.coords['longitude'].min()),
+        'max_lon': float(ds.coords['longitude'].max()),
     }
 
-    # Turn to data frame
-    bb_df = pd.DataFrame([bb_dict])
-
-    # Return data frame
-    return bb_df
+    # Return dictionary
+    return bb_dict
 
 
 def get_fishing_effort(
-    token: str, date_start: str, date_end: str, bbox_df: pd.DataFrame
+    token: str, date_start: str, date_end: str, bbox: dict
 ) -> pd.DataFrame:
     """
     Get fishing effort data from 4wings report endpoint.
     Returns a pandas dataframe with fishing_hours, lat, lon columns,
     and one row for each cell.
     """
-
-    bbox = bbox_df["min_lon", "min_lat", "max_lon", "max_lat"].values[0]
+    ptt = bbox['PTT']
+    keys = ['min_lon', 'min_lat', 'max_lon', 'max_lat']
+    bbox = [bbox[k] for k in keys]
 
     endpoint = f"https://gateway.api.globalfishingwatch.org/v3/4wings/report"
     auth_header = {"Authorization": f"Bearer {token}"}
@@ -85,6 +83,7 @@ def get_fishing_effort(
         table = pd.DataFrame.from_dict(value)
     table = table.drop(columns=["date"])
     table = table.rename(columns={"hours": "fishing_hours"})
+    table['PTT'] = ptt
     return table
 
 
@@ -102,3 +101,17 @@ def download_gfw_data(
     effort_df = get_fishing_effort(token, date_start, date_end, bbox_df)
 
     return effort_df
+
+if __name__=="__main__":
+    # Define parameters
+    filename = "../data/227151/227151-15-GPE3.nc"
+    tag_id = "227151"
+
+    token_path = "gfw-token.txt"
+    with open(token_path, "r") as f:
+        token = f.read().strip()
+
+    date_start = "2023-01-01"
+    date_end = "2024-01-01"
+
+    print(download_gfw_data(filename, tag_id, token, date_start, date_end))
