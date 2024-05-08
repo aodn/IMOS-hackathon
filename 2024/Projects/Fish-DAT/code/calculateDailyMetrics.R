@@ -6,12 +6,6 @@ library(tidyverse)
 library(lubridate)
 library(traipse)
 
-# Set to project root directory
-setwd("~/Documents/Projects/dev/IMOS-hackathon-1")
-
-# Get for one animal
-basedir <- "2024/Projects/Fish-DAT/data/47622"
-
 calculate_daily_metrics <- function(basedir) {
   # Load the data
   filename <- dir(file.path(basedir), pattern = "daily-positions.csv", full.names = TRUE)
@@ -74,6 +68,27 @@ if (
   is_empty(filename) == FALSE
 ) {
   # use PDTs.csv
+  
+  # Do temp and depth separately
+  test <- read_csv(filename) %>% 
+    select(Ptt, Date, contains("Temp"))
+  
+  glimpse(test)
+  min_cols <- grep("MinTemp", names(test), value = TRUE)
+  max_cols <- grep("MaxTemp", names(test), value = TRUE)
+    
+  means <- purrr::map2(min_cols, max_cols, function(x, y) {
+    (test[[x]] + test[[y]]) / 2
+  }) 
+  
+  # Convert means to a data frame and name columns
+  means_df <- as.data.frame(means)
+  names(means_df) <- paste0("Mean", seq_along(means))
+  
+  # Bind the new means data frame to the original data frame
+  test <- bind_cols(test, means_df) %>% 
+    mutate(DailyMeanTemp = rowMeans(select(., starts_with("Mean")), na.rm = TRUE))
+  
 
   pdt_dat <- read_csv(filename) %>% 
     # split Date by " " and create string of second element + first element

@@ -5,6 +5,7 @@
 rm(list=ls()) # to clear workspace
 
 # Set working directory
+<<<<<<< HEAD
 <<<<<<< HEAD:2024/Projects/Fish-DAT/code/Plot basic movement.R
 setwd("IMOS-hackathon/2024/Projects/Fish-DAT/data/") # set manually to your own working directory
 =======
@@ -16,47 +17,67 @@ library(data.table)
 track <- fread("2024/Projects/Fish-DAT/data/kingfish/227151/227151_daily-positions.csv"); head(track) # set manually to the right file you wish to load
 track <- as.data.frame(track)
 ## ------------------------------------------------------------------------------------------ ##
+=======
+setwd("~/Documents/GitHub/IMOS-hackathon/2024/Projects/Fish-DAT/data") # set manually to your own working directory
 
-library(dplyr)
+## Packages needed
+library(tidyverse)
+library(lubridate)
+library(data.table)
+library(sf)
+library(ggspatial)
+library(leaflet)
+library(htmlwidgets)
+
+# Load the data
+track <- read_csv("227150/227150_daily-positions.csv") #; head(track) # set manually to the right file you wish to load
+>>>>>>> 6e56330c6631875fb5aae1e2e8ef54bfad419e7e
+
+# track <- as.data.frame(track)
+## ------------------------------------------------------------------------------------------ ##
 
 ## Create a spatial map
 
 #Create a custom color scale
-monthly_colour_palette <- read.csv("~/Documents/GitHub/IMOS-hackathon/2024/Projects/Fish-DAT/data/monthly_colour_palette.csv", header=TRUE); head(monthly_colour_palette)
+monthly_colour_palette <- read_csv("~/Documents/GitHub/IMOS-hackathon/2024/Projects/Fish-DAT/data/monthly_colour_palette.csv")
 myColors <- unique(monthly_colour_palette$colour)
 myColors <- setNames(myColors, unique(monthly_colour_palette$month))
-colScale <- scale_colour_manual(name = "Month:", values = myColors)     
+# colScale <- scale_colour_manual(name = "Month:", values = myColors)     
 
 # Assign colour depending on month
 track <- inner_join(track, monthly_colour_palette, by = "month") # automatically assign colour as new column based on our colour palette
-track <- as.data.frame(track)
+# track <- as.data.frame(track)
 head(track)
 
 # Convert data to Spatial Point Data Frame for mapping with correct projection
-library(sf); 
 track_sf <- track %>% 
-  st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326, remove = F) #WGS84
+  st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326, remove = F) %>%   #WGS84
+  mutate(month = factor(month, levels = c(names(myColors))))
 
 #------------------
 # Static plot
-library(ggplot2); library(ggspatial); library(MetBrewer)
 
-#ggplot() +
-ggmap(esri_sat) +
-  geom_spatial_path(data = track_sf, aes(x = Longitude, y = Latitude, col = day.at.liberty), crs = 4326, colour = track_sf$colour) +
-  layer_spatial(data = track_sf, aes(col = day.at.liberty), size = 2.5, colour = track_sf$colour) +
+esri_sat <- paste0('https://services.arcgisonline.com/arcgis/rest/services/',
+                   'World_Imagery/MapServer/tile/${z}/${y}/${x}.jpeg')
+
+ggplot() +
+  annotation_map_tile(esri_sat) +
+  geom_spatial_path(data = track_sf, crs = 4326, 
+                    aes(x = Longitude, y = Latitude, col = month)) +
+  layer_spatial(data = track_sf, aes(col = month), size = 2.5) +
   labs(x = "Longitude", y = "Latitude") +
-  #colScale +
   annotation_scale(location = "br", line_col = "white", text_col = "white") +
-  annotation_north_arrow(location = "tr", style = north_arrow_fancy_orienteering(fill = c(NA, "white"), line_col = "white", text_col = "white", text_face = "bold")) +
+  annotation_north_arrow(location = "tr", 
+                         style = north_arrow_fancy_orienteering(fill = c(NA, "white"), line_col = "white", 
+                                                                text_col = "white", text_face = "bold")) +
+  scale_colour_manual(name = "Month:", values = myColors) +
+  facet_wrap(~Ptt) +
   theme_bw() +
   theme(axis.text = element_blank(), axis.title = element_blank(), axis.ticks = element_blank())
 
 
 #------------------
 # Interactive plot
-library(leaflet); library(htmlwidgets)
-
 ## Can add in variables as we calculate more for each tagged animal
 
 mytext = paste(
@@ -67,10 +88,11 @@ mytext = paste(
   "Latitude: ", track$Latitude, sep="") %>%
   lapply(htmltools::HTML)
 
-myleafletplot <- leaflet() %>%
+myleafletplot <-
+  leaflet() %>%
   # Base groups (you can add multiple basemaps):
-  addProviderTiles(providers$Esri.WorldImagery, group="Satellite") %>%   # typical Google Earth satellite view
   addProviderTiles(providers$OpenStreetMap, group="Map") %>%   # Street Map view
+  addProviderTiles(providers$Esri.WorldImagery, group="Satellite") %>%   # typical Google Earth satellite view
   # Add location data:
   addPolylines(lng = track_sf$Longitude, lat = track_sf$Latitude, 
                color = "white", weight = 1.5,
@@ -83,15 +105,16 @@ myleafletplot <- leaflet() %>%
                    label=mytext) %>%  # don’t forget to assign a group to the markers
   # Layers control
   addLayersControl(
-    baseGroups = c("Satellite", "Map"),  # specify the desired basemap options for the output map
-    overlayGroups = as.character(unique(track_sf$month)),  # add the data groups to overlay on the map
-    options = layersControlOptions(collapsed = FALSE)) %>%
+    overlayGroups = c("Satellite"),  # specify the desired basemap options for the output map
+    baseGroups = as.character(unique(track_sf$Ptt)),  # add the data groups to overlay on the map
+    options = layersControlOptions(collapsed = FALSE, position = "topright")) %>%
   # Add legend
-  addLegend(position = "bottomright",
-            colors = unique(track_sf$colour), labels = unique(track_sf$month),
+  addLegend(position = "topleft",
+            colors = myColors, labels = names(myColors),
             title = "Month:",
             opacity = 1
-  )
+  ) %>% 
+  leaflet::hideGroup("Satellite")
 
 
 myleafletplot # Print the map
