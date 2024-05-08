@@ -16,11 +16,7 @@ else:
 
 # %% Import packages
 
-import xarray as xr
 import os
-import requests
-import re
-import numpy as np
 
 os.chdir(account + r'\OneDrive - UNSW\Work\CTD_AGG')
 import aggregated_profiles as agg
@@ -30,7 +26,7 @@ import PickleStuff as ps
 
 sites = ['NRSNSI', 'CH050', 'CH070', 'CH100', 'SYD100', 'SYD140', 'PH100', 'BMP070', 'BMP090', 'BMP120', 'NRSMAI', 'NRSKAI', 'NRSROT', 'NRSYON', 'WATR50']
 
-CTDdata = {}
+CTDdata_TEMP = {}
 for s in sites:
 
     # get correct link for downloading data
@@ -40,12 +36,7 @@ for s in sites:
     if link == 0:
         link = 'https://thredds.aodn.org.au/thredds/catalog/IMOS/ANMN/NSW/' + s + '/Biogeochem_profiles/catalog.html'
     print(link)
-    
     # get data
-<<<<<<< Updated upstream
-    CTDdata[s] = agg.AggregateProfiles(link,'TEMP')
-        
-=======
     CTDdata_TEMP[s] = agg.AggregateProfiles(link,'TEMP')
     
 CTDdata_PSAL = {}
@@ -61,8 +52,9 @@ for s in sites:
     
     # get data
     CTDdata_PSAL[s] = agg.AggregateProfiles(link,'PSAL')
->>>>>>> Stashed changes
+
         
 # %% save data as a pickle
 
-ps.PickleSave(account + r'\OneDrive - UNSW\Work\CTD_AGG\CTDaggData.pickle',CTDdata)
+ps.PickleSave('Data\\PH100CTD_TEMP.pickle', CTDdata_TEMP)
+ps.PickleSave('Data\\PH100CTD_PSAL.pickle', CTDdata_PSAL)
