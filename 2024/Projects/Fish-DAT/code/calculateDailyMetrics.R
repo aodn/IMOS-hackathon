@@ -16,7 +16,11 @@ filename <- dir(file.path(basedir), pattern = "daily-positions.csv", full.names 
 d <- read_csv(filename); d; glimpse(d);
 
 
+# Init output data
+out <- NULL 
+
 # Load hi-res series data
+
 
 if (file.exists(file.path(basedir, "Series.csv"))) {
   filename <- dir(file.path(basedir), pattern = "Series.csv", full.names = TRUE)
@@ -33,20 +37,20 @@ if (file.exists(file.path(basedir, "Series.csv"))) {
     ) %>% 
     select(Ptt, Day, MinTempFromSeries, MeanTempFromSeries, MaxTempFromSeries, MinDepthFromSeries, MaxDepthFromSeries, MeanDepthFromSeries); env_dat; glimpse(env_dat)
   
+  out <- left_join(d, series_dat, by = c("Date" = "Day", "Ptt" = "Ptt"))
   
 } 
   
 
 # IF animal doesn't have Series.csv use the summary data
-# PDTs.csv (to get mean temp), DailyData.csv
-
-# DailyData.csv
+# use DailyData.csv
 filename <- dir(file.path(basedir), pattern = "DailyData.csv", full.names = TRUE)
 daily_dat <- read_csv(filename) %>% 
   mutate(Day = mdy(Date)) %>% 
   select(Ptt, Day, MinTemp, MaxTemp, MinDepth, MaxDepth); daily_dat; glimpse(daily_dat)
 
 
+# use PDTs.csv
 filename <- dir(file.path(basedir), pattern = "PDTs.csv", full.names = TRUE)
 pdt_dat <- read_csv(filename) %>% 
   # split Date by " " and create string of second element + first element
@@ -64,6 +68,6 @@ glimpse(pdt_dat)
 
 
 # Append daily_dat to out
-out <- left_join(d, series_dat, by = c("Date" = "Day", "Ptt" = "Ptt")) %>% 
+out <- out %>% 
   left_join(., daily_dat, by = c("Date" = "Day", "Ptt" = "Ptt")) %>% 
   left_join(., pdt_dat, by = c("Date" = "Day", "Ptt" = "Ptt"))
