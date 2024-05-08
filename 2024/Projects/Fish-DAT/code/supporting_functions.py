@@ -101,17 +101,3 @@ def download_gfw_data(
     effort_df = get_fishing_effort(token, date_start, date_end, bbox_df)
 
     return effort_df
-
-if __name__=="__main__":
-    # Define parameters
-    filename = "../data/227151/227151-15-GPE3.nc"
-    tag_id = "227151"
-
-    token_path = "gfw-token.txt"
-    with open(token_path, "r") as f:
-        token = f.read().strip()
-
-    date_start = "2023-01-01"
-    date_end = "2024-01-01"
-
-    print(download_gfw_data(filename, tag_id, token, date_start, date_end))
