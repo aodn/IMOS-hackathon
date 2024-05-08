@@ -13,7 +13,7 @@ setwd("~/Documents/GitHub/IMOS-hackathon/2024/Projects/Fish-DAT/data/") # set ma
 
 # Load the data
 library(data.table)
-dat <- fread("227151/227151-15-GPE3.csv"); head(dat); dat <- as.data.frame(dat)
+dat <- fread("47622/47622-47622-8-GPE3.csv"); head(dat); dat <- as.data.frame(dat)
 ptt_id = unique(dat$Ptt)
 
 # lookup local timezone

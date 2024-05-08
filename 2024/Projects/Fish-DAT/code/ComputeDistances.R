@@ -7,11 +7,17 @@
 
 # Initialise
 rm(list=ls(all.names = TRUE)) # to clear workspace
-setwd("~/Documents/GitHub/IMOS-hackathon/2024/Projects/Fish-DAT/data/227151") # set up your respective directory
+setwd("~/Documents/GitHub/IMOS-hackathon/2024/Projects/Fish-DAT/data/") # set up your respective directory
 
 #---- import data ----
-dat<-read.csv("227151_daily-positions.csv",header=TRUE); head(dat)
-dat$Date <- as.POSIXct(as.character(dat$Date), format="%Y-%m-%d", tz="Australia/Sydney", origin = "1970-01-01")
+dat<-read.csv("47622/47622_daily-positions.csv",header=TRUE); head(dat)
+
+# lookup local timezone
+library(lutz)
+timeZ <- tz_lookup_coords(lat = dat$Latitude, lon = dat$Longitude, method = "accurate"); 
+timeZ <- timeZ[1]
+
+dat$Date <- as.POSIXct(as.character(dat$Date), format="%Y-%m-%d", tz=timeZ, origin = "1970-01-01")
 head(dat)
 
 #---- define ROI ----
@@ -27,7 +33,26 @@ library(marmap)
 bat <- getNOAA.bathy(LonMin, LonMax, LatMin, LatMax, res = 1, keep=TRUE) 
 summary(bat)
 
-library(remora)
+#--- Extract bathymetry and cumulative distance travelled at each position along the track ----
+dat.bathy <- get.depth(bat, x=dat$Longitude, y=dat$Latitude, distance=T, locator=F, res = 1) 
+colnames(dat.bathy) <- c("Longitude", "Latitude", "DistfromStart", "bathy_depth")
+head(dat.bathy)
+
+library(dplyr)
+dat <- left_join(dat,dat.bathy, by=c("Latitude","Longitude")); head(dat)
+  
+# library(remora)
+# dat <- extractEnv(df = dat,
+#                      X = "Longitude", 
+#                      Y = "Latitude", 
+#                      datetime = "Date", 
+#                      env_var = "bathy",  ## Currently only a single variable can be called at a time
+#                      cache_layers = TRUE,
+#                      crop_layers = FALSE,  
+#                      full_timeperiod = FALSE,
+#                      folder_name = "bathy_GA",
+#                      .parallel = TRUE)
+# head(dat)
 
 #---- Compute distances: ----
 x <- as.numeric(dat$Longitude) 
@@ -46,5 +71,5 @@ DistToShore <- d_shore$distance
 dat <- cbind(dat, DistToShelf, DistToShore); head(dat) # merge outputs with main data frame
 
 #---- Save data ----
-write.csv(dat,file="227151_daily-positions.csv",dec=".",col.names=TRUE) # save as .csv
+write.csv(dat,paste0(unique(dat$Ptt),"/",unique(dat$Ptt),"","_daily-positions.csv"), row.names=F)
 
