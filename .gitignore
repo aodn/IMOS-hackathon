@@ -161,6 +161,8 @@ cython_debug/
 
 # R
 .Rhistory
+*.Rproj
 
 # MacOS attribute file
 .DS_Store
+.Rproj.user
