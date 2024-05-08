@@ -167,3 +167,6 @@ cython_debug/
 # MacOS attribute file
 .DS_Store
 .Rproj.user
+
+#Ignore netcdf auxiliary files
+*.nc.aux.xml
