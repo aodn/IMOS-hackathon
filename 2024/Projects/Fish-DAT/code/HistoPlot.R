@@ -87,15 +87,32 @@ histoplot <- function(tag_ids = c("47618", "47622", "227150", "227151"),
                       folder_path = "2024/Projects/Fish-DAT/data/",
                       TAD = TRUE,
                       TAT = TRUE,
+                      species = TRUE,
                       OO_Shelf = TRUE){
   
   plot_dat <- histoviz(folder_path) %>% 
-    filter(id %in% tag_ids) %>% 
-    # mutate()
+    filter(id %in% tag_ids) #%>% 
+    # mutate(bin = as.numeric(as.character(bin)))
+  
+  plot_dat$species = "Cool species"
+  
+  if(species){  
+    spec_dat <- plot_dat %>% 
+      drop_na(prop, bin) %>% 
+      group_by(species, bin, variable) %>% 
+      summarise(prop_mean = mean(prop, na.rm = TRUE),
+                prop_sd = sd(prop, na.rm = TRUE),
+                id = id[1]) %>% 
+      ungroup() %>% 
+      arrange(bin)
+  }
+  
+  plot_dat <- plot_dat %>% 
     drop_na(prop, bin) %>% 
     group_by(id, bin, variable) %>% 
     summarise(prop_mean = mean(prop, na.rm = TRUE),
-              prop_sd = sd(prop, na.rm = TRUE))
+              prop_sd = sd(prop, na.rm = TRUE)) %>% 
+    ungroup()
     
   
   # Simple bar plots of TAT
@@ -117,12 +134,18 @@ histoplot <- function(tag_ids = c("47618", "47622", "227150", "227151"),
         
           scale_fill_viridis_d(name = "Tag ID") +
           scale_colour_viridis_d(name = "Tag ID") +
-          coord_cartesian(expand = FALSE) +
+          coord_cartesian(expand = TRUE,
+                          # ylim = range(plot_dat %>% 
+                          #                filter(variable == "temp") %>% 
+                          #                pull(bin)
+                          #              )
+                          ) +
+          
           # geom_density(alpha = 0.2) +
           ylab(expr(paste("Temp ("^"o","C)"))) +
           xlab("Proportion of time (%)") +
-          theme_bw() +
-          facet_wrap(~id)
+          theme_bw() 
+    g_TAT
   }
   if(TAD){
       # Simple bar plots of TAD
@@ -148,47 +171,17 @@ histoplot <- function(tag_ids = c("47618", "47622", "227150", "227151"),
           # scale_y_reverse() +
           ylab("Depth (m)") +
           xlab("Proportion of time (%)") +
-          theme_bw() +
-          facet_wrap(~id)
+          theme_bw() 
+     # if(species){
+     #   g_TAD + geom_path(data = spec_dat %>% filter(variable == "depth"),
+     #                     mapping = aes(y = bin,
+     #                                   # group = id,
+     #                                   # colour = id,
+     #                                   # fill = id,
+     #                                   x = prop_mean)
+     #   )
+     # }
   }
   
-  
-  
-  
-  # # Simple plotting of TAT
-  # ggplot(plot_dat %>% filter(variable == "temp"),
-  #        mapping = aes(y = bin,
-  #                      # y = prop_time,
-  #                      group = id,
-  #                      colour = id,
-  #                      fill = id,
-  #                      weight = prop_mean)
-  # ) +
-  #   scale_fill_viridis_d(name = "Tag ID") +
-  #   scale_colour_viridis_d(name = "Tag ID") +
-  #   coord_cartesian(expand = FALSE) +
-  #   geom_density(alpha = 0.2) +
-  #   ylab(expr(paste("Temp ("^"o","C)"))) +
-  #   xlab("Proportion of time (%)") +
-  #   theme_bw()
-  # 
-  # 
-  # # Placeholder simple plotting of TAD
-  # ggplot(plot_dat %>% filter(variable == "depth"),
-  #        mapping = aes(y = as.numeric(as.character(bin)),
-  #                      # y = prop_time,
-  #                      group = id,
-  #                      colour = id,
-  #                      fill = id,
-  #                      weight = prop_mean)
-  # ) +
-  #   scale_fill_viridis_d(name = "Tag ID") +
-  #   scale_colour_viridis_d(name = "Tag ID") +
-  #   coord_cartesian(expand = FALSE) +
-  #   geom_density(alpha = 0.2) +
-  #   # scale_y_reverse() +
-  #   ylab("Depth (m)") +
-  #   xlab("Proportion of time (%)") +
-  #   theme_bw()
   
 }
