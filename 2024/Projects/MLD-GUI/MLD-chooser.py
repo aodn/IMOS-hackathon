@@ -17,6 +17,22 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import PickleStuff as ps # functions to save/load pickle files
 import numpy as np
+import pandas as pd
+from datetime import datetime
+
+# %% ----------------------------------------------------------------------------
+# Function to get season from datetime64
+
+def get_season(date):
+    month = date.astype('datetime64[M]').astype(int) % 12 + 1
+    if month in [3, 4, 5]:
+        return 'Autumn'
+    elif month in [6, 7, 8]:
+        return 'Winter'
+    elif month in [9, 10, 11]:
+        return 'Spring'
+    else:
+        return 'Summer'
 
 # %% ----------------------------------------------------------------------------
 # Load data
@@ -25,11 +41,14 @@ PSAL = ps.PickleLoad('Data\PH100CTD_PSAL.pickle')
 TEMP = ps.PickleLoad('Data\PH100CTD_TEMP.pickle')
 
 # example profiles for testing
-nprofs = 10
+nprofs = 3
 un_t = np.unique(PSAL['PH100']['PSAL'].TIME.values)
 random_selection = np.random.choice(un_t, size=nprofs)
 CTDs = {}
 temperature_profiles = []
+dates = []
+times = []
+seasons = []
 for n in range(len(random_selection)):
     c = PSAL['PH100']['PSAL'].TIME.values == random_selection[n]
     # CTDs[str(n)] = list(zip(PSAL['PH100']['PSAL'].DEPTH.values[c],
@@ -45,6 +64,20 @@ for n in range(len(random_selection)):
     
     temperature_profiles.append(TEMP_tuple)
     
+    # get other information
+    # Given numpy.datetime64 object
+    datetime_obj = random_selection[n]
+    
+    # Convert to Python datetime object
+    python_datetime_obj = datetime.utcfromtimestamp(datetime_obj.astype('O') / 1e9)
+    
+    # Extract date and time components
+    date_component = python_datetime_obj.date()
+    time_component = python_datetime_obj.time()
+
+    dates.append(str(date_component))
+    times.append(str(time_component)[0:5])
+    seasons.append(get_season(random_selection[n]))
 
 # max depth use for ylimit
 
@@ -167,3 +200,24 @@ if __name__ == "__main__":
     print("MLD Recorded Depths:", gui.recorded_depths)
 
 # %% ----------------------------------------------------------------------------
+# create dataframe and save output as a CSV
+
+df = pd.DataFrame({'Profile n': np.arange(1,nprofs+1,1), 
+                   'Date': np.array(dates),
+                   'Time (UTC)': np.array(times),
+                   'Austral Season': np.array(seasons),
+                   'MLD recorded [m]': np.round(gui.recorded_depths,0)})
+# set index as profile n
+df.set_index('Profile n', inplace=True)
+
+# Get the current time
+current_time = datetime.now()
+# Format the current time
+formatted_time = current_time.strftime('%Y-%m-%d_%H-%M')
+
+df.to_csv('MLD-recorded_' + formatted_time + '.csv')
+
+
+
+
+
