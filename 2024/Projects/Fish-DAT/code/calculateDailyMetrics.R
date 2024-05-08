@@ -15,7 +15,7 @@ basedir <- "2024/Projects/Fish-DAT/data/47622"
 calculate_daily_metrics <- function(basedir) {
   # Load the data
   filename <- dir(file.path(basedir), pattern = "daily-positions.csv", full.names = TRUE)
-  d <- read_csv(filename); d; glimpse(d)
+  d <- read_csv(filename)
 
 
 # Init output data
@@ -24,7 +24,9 @@ out <- d
 # Load hi-res series data
 
 filename <- dir(file.path(basedir), pattern = "Series.csv", full.names = TRUE)
-if (is.null(filename) == FALSE ) {
+
+
+if (is_empty(filename) == FALSE) {
   series_dat <- read_csv(filename) %>% 
     mutate(Day = dmy(Day)) %>% 
     group_by(Ptt, Day) %>% 
@@ -38,8 +40,6 @@ if (is.null(filename) == FALSE ) {
     ) %>% 
     select(Ptt, Day, MinTempFromSeries, MeanTempFromSeries, MaxTempFromSeries, MinDepthFromSeries, MaxDepthFromSeries, MeanDepthFromSeries)
   
-  # env_dat; glimpse(env_dat)
-  
   out <- left_join(out, series_dat, by = c("Date" = "Day", "Ptt" = "Ptt"))
   
 }  else {
@@ -52,12 +52,12 @@ if (is.null(filename) == FALSE ) {
 # use DailyData.csv
 filename <- dir(file.path(basedir), pattern = "DailyData.csv", full.names = TRUE)
 if(
-  is.null(filename) == FALSE
+  is_empty(filename) == FALSE
 ) {
 
   daily_dat <- read_csv(filename) %>% 
     mutate(Day = mdy(Date)) %>% 
-    select(Ptt, Day, MinTemp, MaxTemp, MinDepth, MaxDepth); 
+    select(Ptt, Day, MinTemp, MaxTemp, MinDepth, MaxDepth)
   
   # daily_dat
   # glimpse(daily_dat)
@@ -71,7 +71,7 @@ if(
 
 filename <- dir(file.path(basedir), pattern = "PDTs.csv", full.names = TRUE)
 if (
-  is.null(filename) == FALSE
+  is_empty(filename) == FALSE
 ) {
   # use PDTs.csv
 
@@ -83,7 +83,7 @@ if (
     mutate(Day = as.Date(Date)) %>% 
     mutate(MeanTempPDT = rowMeans(select(., contains("Temp")), na.rm = TRUE)) %>% 
     mutate(MeanDepthPDT = rowMeans(select(., contains("Depth")), na.rm = TRUE)) %>% 
-    select(Ptt, Day, MeanTempPDT, MeanDepthPDT); pdt_dat; 
+    select(Ptt, Day, MeanTempPDT, MeanDepthPDT)
   
   # pdt_dat
   # glimpse(pdt_dat)
@@ -121,9 +121,5 @@ for (folder in folder_names) {
   
   glimpse(output)
 }
-
-output <- calculate_daily_metrics(basedir)
-output
-glimpse(output)
 
 
