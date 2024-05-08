@@ -1,3 +1,5 @@
-﻿PTT_ID,TotalLength,Deployment_Date,Deployment_Location,Deployment_Lat,Deployment_Lon,Detachment_Date,Detachment_Lat,Detachment_Lon,Speed_Filter
-227150,127,6/12/2022,Lord Howe Island,-31.77816,159.34932,10/12/2023,-32.0405,158.1221,1.75
-227151,108,25/3/2022,Sydney,-33.97402,151.3569,18/6/2022,-35.233,151.151,2.25
+﻿PTT_ID,Species,TotalLength,Deployment_Date,Deployment_Location,Deployment_Lat,Deployment_Lon,Detachment_Date,Detachment_Lat,Detachment_Lon,Speed_Filter
+227150,Kingfish,127,6/12/2022,Lord Howe Island,-31.77816,159.34932,10/12/2023,-32.0405,158.1221,1.75
+227151,Kingfish,108,25/3/2022,Sydney,-33.97402,151.3569,18/6/2022,-35.233,151.151,2.25
+47618,Silky Shark,230,2/2/2019,Cook Islands,-21.925,-160.3,11/7/2019,-19.625,-166.125,1.5
+47622,Silky Shark,253,26/2/2019,Cook Islands,-20.575,-160.25,19/7/2019,-6.875,-155.5,1.5

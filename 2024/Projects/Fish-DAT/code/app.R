@@ -13,13 +13,14 @@ library(sf)
 library(htmlwidgets)
 
 #Load data
-track <- read.csv("data/227151/227151_daily-positions.csv")
-photo <- "kingfish_test.jpg"
+setwd("~/Documents/GitHub/IMOS-hackathon/2024/Projects/Fish-DAT/data/") # set manually to your own working directory
+track <- read.csv("227151/227151_daily-positions.csv"); head(track) # manual for now, needs to be automated depending on filter selection
+#photo <- "kingfish_test.jpg"
 
 #Create map
 
 #Create a custom color scale
-monthly_colour_palette <- read.csv("data/monthly_colour_palette.csv", header=TRUE)
+monthly_colour_palette <- read.csv("monthly_colour_palette.csv", header=TRUE); head(monthly_colour_palette)
 myColors <- unique(monthly_colour_palette$colour)
 myColors <- setNames(myColors, unique(monthly_colour_palette$month))
 colScale <- scale_colour_manual(name = "Month:", values = myColors) 
@@ -91,11 +92,11 @@ ui <- tablerDashPage(
       tablerNavMenuItem(
         tabName = "Home",
         icon = "camera",
-        "Kingfish Passport"
+        "Fish Passport"
       )
     )
   ),
-  title = "Kingfish Passport",
+  title = "Fish Passport",
   body = tablerDashBody(
     # load pushbar dependencies
     pushbar_deps(),
