@@ -13,12 +13,16 @@ setwd("~/Documents/GitHub/IMOS-hackathon/2024/Projects/Fish-DAT/data/") # set ma
 
 # Load the data
 library(data.table)
-dat <- fread("227151/227151-15-GPE3.csv"); head(dat)
-dat <- as.data.frame(dat)
+dat <- fread("227151/227151-15-GPE3.csv"); head(dat); dat <- as.data.frame(dat)
+ptt_id = unique(dat$Ptt)
+
+# lookup local timezone
+timeZ <- tz_lookup_coords(lat = dat$`Most Likely Latitude`, lon = dat$`Most Likely Longitude`, method = "accurate"); 
+timeZ <- timeZ[1]
 
 # Do time conversion and extract Date and Time as separate columns
 dat$datetime.UTC <- as.POSIXct(as.character(dat$Date), format="%d-%b-%Y %H:%M:%S", tz="UTC", origin = "1970-01-01"); 
-dat$datetime.LOCAL <- as.POSIXlt(dat$datetime.UTC, tz='Australia/Sydney'); 
+dat$datetime.LOCAL <- as.POSIXlt(dat$datetime.UTC, tz=timeZ); 
 dat$Time <- format(as.POSIXct(dat$datetime.LOCAL,format="%Y:%m:%d %H:%M:%S"),"%H:%M:%S")
 dat$Date <- format(as.POSIXct(dat$datetime.LOCAL,format="%Y:%m:%d %H:%M:%S"),"%Y-%m-%d")
 head(dat)
@@ -38,11 +42,12 @@ track
 #load the masterfile with the known release (deployment) and detachments (pop-off) locations
 rawdata <- fread("HackathonMetadata.csv")
 #Replacing deployment longitude and latitude
-track$Latitude[1] <- rawdata$Deployment_Lat[1]
-track$Longitude[1] < rawdata$Deployment_Lon[1]
+x = rawdata[which(rawdata$PTT_ID == ptt_id),]; head(x)
+track$Latitude[1] <- x$Deployment_Lat
+track$Longitude[1] <- x$Deployment_Lon
 #Replacing detachment longitude and latitude (need to check what row of each data you are transferring over)
-track$Latitude[86] <- rawdata$Detachment_Lat[1]
-track$Longitude[86] < rawdata$Detachment_Lon[1] #not sure why this line of code isn't working
+track$Latitude[nrow(track)] <- x$Detachment_Lat
+track$Longitude[nrow(track)] <- x$Detachment_Lon[1] #not sure why this line of code isn't working
 
 #####
 
