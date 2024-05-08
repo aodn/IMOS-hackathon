@@ -5,19 +5,17 @@
 rm(list=ls()) # to clear workspace
 
 # Set working directory
-<<<<<<< HEAD
-<<<<<<< HEAD:2024/Projects/Fish-DAT/code/Plot basic movement.R
 setwd("IMOS-hackathon/2024/Projects/Fish-DAT/data/") # set manually to your own working directory
-=======
+
 setwd("~/Documents/GitHub/IMOS-hackathon/2024/Projects/Fish-DAT/data/kingfish/") # set manually to your own working directory
->>>>>>> e45d4b5c39b25fc7e883b96a05d7df6b70e6bc2a:2024/Projects/Fish-DAT/code/PlotBasicMovement.R
+
 
 # Load the data
 library(data.table)
 track <- fread("2024/Projects/Fish-DAT/data/kingfish/227151/227151_daily-positions.csv"); head(track) # set manually to the right file you wish to load
 track <- as.data.frame(track)
 ## ------------------------------------------------------------------------------------------ ##
-=======
+
 setwd("~/Documents/GitHub/IMOS-hackathon/2024/Projects/Fish-DAT/data") # set manually to your own working directory
 
 ## Packages needed
@@ -31,7 +29,7 @@ library(htmlwidgets)
 
 # Load the data
 track <- read_csv("227150/227150_daily-positions.csv") #; head(track) # set manually to the right file you wish to load
->>>>>>> 6e56330c6631875fb5aae1e2e8ef54bfad419e7e
+
 
 # track <- as.data.frame(track)
 ## ------------------------------------------------------------------------------------------ ##
