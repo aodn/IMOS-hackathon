@@ -2,11 +2,14 @@
 # MLD-chooser.py
 
 # 08/05/2024
-# Natalia Atkins (IMOS) and Michael Hemming (NSW-IMOS)
+# Natalia Ribeiro (IMOS) and Michael Hemming (NSW-IMOS)
 
 # %% ----------------------------------------------------------------------------
 # Import packages
 
+import os
+os.chdir('C:\\Users\\mphem\\OneDrive - UNSW\\Work\\QAQC_NRT_AODNhackathon_2024\\' + 
+         'AODNhackathon\\aodn-hackathon\\2024\\Projects\\MLD-GUI')
 
 import tkinter as tk
 from tkinter import filedialog
