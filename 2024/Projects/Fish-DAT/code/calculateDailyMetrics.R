@@ -4,6 +4,7 @@
 # Setup
 library(tidyverse)
 library(lubridate)
+library(traipse)
 
 # Set to project root directory
 setwd("~/Documents/Projects/dev/IMOS-hackathon-1")
@@ -93,11 +94,36 @@ if (
   message("No PDTs.csv found in folder")
 }
 
+# Calculate daily distance travelled
+out <- out %>% 
+  mutate(DistTravelled = track_distance_to(Longitude, Latitude, lag(Longitude), lag(Latitude)) / 1000)
+
+
+
 
 return(out)
 }
 
 
+# 47618
+# 47622
+# 227150
+# 227151
+
+folder_names <- c("47618", "47622", "227150", "227151")
+
+for (folder in folder_names) {
+  basedir <- paste0("2024/Projects/Fish-DAT/data/", folder)
+  output <- calculate_daily_metrics(basedir)
+  output
+  # save to 2024/Projects/Fish-DAT/outputs/[foldername]_summaries.csv
+  write_csv(output, file = paste0("2024/Projects/Fish-DAT/outputs/", folder, "_summaries.csv"))
+  
+  glimpse(output)
+}
+
 output <- calculate_daily_metrics(basedir)
 output
 glimpse(output)
+
+
