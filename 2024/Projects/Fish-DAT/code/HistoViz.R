@@ -73,6 +73,7 @@ histoviz <- function(folder_path){
   outdat <- 
     map(.x = file_names, .f = fn, .progress = TRUE) %>% 
     list_rbind() %>% 
+    mutate(bin = as.factor(bin)) %>% 
     filter(!is.na(variable))
   
   return(outdat)
@@ -86,20 +87,29 @@ folder_path <- "~/Documents/GitHub/IMOS-hackathon/2024/Projects/Fish-DAT/data"
 
 h <- histoviz(folder_path)
 
-h %>% 
+## summarise variables to larger time steps (daily) so it plots nicer
+h_summary <-
+  h %>% 
+  mutate(date = date(date)) %>% 
+  group_by(id, date, bin, variable) %>% 
+  summarise(prop = mean(prop))
+
+h_summary %>% 
   filter(variable %in% "depth") %>% 
-  ggplot(aes(x = date, y = bin, fill = prop, id = variable)) +
+  ggplot(aes(x = date, y = fct_rev(bin), fill = prop, id = variable)) +
   geom_tile() +
   facet_wrap(~id, ncol = 1, scales = "free") +
-  scale_y_reverse() +
-  geom_hline(yintercept = 0, lty = 2) +
+  scale_fill_viridis_c(direction = -1, na.value = NA, limits = c(0,100)) +
+  labs(x = "Date", y = "Depth (m)", fill = "Proportion\nof time") +
   theme_bw()
 
-h %>% 
+h_summary %>% 
   filter(variable %in% "temp") %>% 
   ggplot(aes(x = date, y = bin, fill = prop, id = variable)) +
   geom_tile() +
   facet_wrap(~id, ncol = 1, scales = "free") +
+  scale_fill_viridis_c(option = "A", direction = -1, na.value = NA, limits = c(0,100)) +
+  labs(x = "Date", y = "Temperature (˚C)", fill = "Proportion\nof time") +
   theme_bw()
 
 
