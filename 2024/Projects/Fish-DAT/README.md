@@ -44,3 +44,11 @@ A potential example dashboard could look something like this:
 <br>
 
 ![](images/IMG_4949.jpeg)
+
+### Data sources
+Fishing effort data comes from the Global Fishing Watch (GFW) website: https://globalfishingwatch.org. Data can be accessed through their API, you can find more information in their [FAQs](https://globalfishingwatch.org/article-categories/apis/). Note that you will need to create an account to access the API. Details on how to create an account can be found in their [website](https://globalfishingwatch.org/faqs/how-do-i-register-for-a-global-fishing-watch-account/).   
+  
+### Shiny app data sources
+The FishDAT Shiny app is powered by Global Fishing Watch: https://globalfishingwatch.org.
+
+
