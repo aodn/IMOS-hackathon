@@ -145,7 +145,7 @@ gpe3_error_polys <-
 #   group_by(Ptt) %>%
 #   summarise(do_union = T) %>% 
 #   st_as_sf()
-sf::sf_use_s2(TRUE)
+# sf::sf_use_s2(TRUE)
 
 
 
