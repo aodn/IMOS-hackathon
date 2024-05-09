@@ -137,14 +137,14 @@ gpe3_error_polys <-
 #                   alwaysShowDate = TRUE,
 #                   sameDate = TRUE,
 #                   follow = TRUE))
-
-sf::sf_use_s2(FALSE)
-pol_sum <-
-  pols %>% 
-  st_make_valid() %>%
-  group_by(Ptt) %>%
-  summarise(do_union = T) %>% 
-  st_as_sf()
+# 
+# sf::sf_use_s2(FALSE)
+# pol_sum <-
+#   pols %>% 
+#   st_make_valid() %>%
+#   group_by(Ptt) %>%
+#   summarise(do_union = T) %>% 
+#   st_as_sf()
 sf::sf_use_s2(TRUE)
 
 
