@@ -197,7 +197,7 @@ if __name__ == "__main__":
     root.mainloop()
 
     # Output recorded depths
-    print("MLD Recorded Depths:", gui.recorded_depths)
+    print("MLD Recorded Depths: ", gui.recorded_depths)
 
 # %% ----------------------------------------------------------------------------
 # create dataframe and save output as a CSV
