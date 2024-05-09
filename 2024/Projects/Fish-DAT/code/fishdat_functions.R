@@ -1,9 +1,11 @@
 #Customised functions for Fish-DAT
-# Authors: Dahlia Foo
+# Authors: Dahlia Foo, Fabrice Jaine
 
 # Libraries ---------------------------------------------------------------
 library(tidyverse)
 library(traipse)
+library(lutz)
+library(marmap)
 
 # Calculate daily metrics -------------------------------------------------
 # Calculate temperature min, mean, max for each location 
@@ -121,5 +123,59 @@ calculate_daily_metrics <- function(basedir) {
                                              lag(Latitude)) / 1000)
   return(out)
   }
+
+
+# Calculating distances ---------------------------------------------------
+# Calculates: distance from shelf edge, distance from shore, and distance 
+# from nearest estuary from every location included in the track
+compute_distances <- function(path_daily, save_bathy_path){
+  #Inputs:
+  # - path_daily (character): Path to directory where data is stored 
+  # - save_bathy_path (character): Path to directory where bathymetry is to be stored 
   
+  #Load data
+  dat <- read_csv(path_daily) %>% 
+    mutate(Date = as_date(Date))
   
+  #define region of interest (ROI) 
+  # Total ROI for bathymetry
+  LatMax = ceiling(max(dat$Latitude)) + 2
+  LatMin = floor(min(dat$Latitude)) - 2
+  LonMin = floor(min(dat$Longitude)) - 2
+  LonMax = ceiling(max(dat$Longitude)) + 2
+  ROI = c(LonMin, LatMin, LonMax, LatMax)
+  
+  #load bathymetry data
+  bat <- getNOAA.bathy(LonMin, LonMax, LatMin, LatMax, 
+                       res = 1, keep = T, 
+                       path = save_bathy_path)
+  
+  #Extract bathymetry and cumulative distance travelled at each position
+  #along the track
+  dat.bathy <- get.depth(bat, x = dat$Longitude, y = dat$Latitude,
+                         distance = T, locator = F, res = 1) 
+  colnames(dat.bathy) <- c("Longitude", "Latitude", "DistfromStart", 
+                           "bathy_depth")
+  dat <- left_join(dat, dat.bathy, by = c("Latitude", "Longitude"))
+  
+  # Distance to nearest shelf edge (200m isobath):
+  # distances between each sighting and nearest point on shelf edge
+  d_shelf <- dist2isobath(bat, dat$Longitude, dat$Latitude,
+                          isobath = -200)
+  # in km instead of metres
+  d_shelf$distance <- d_shelf$distance/1000 
+  dat$DistToShelf <- d_shelf$distance
+  
+  # Distance to nearest coastline (0m isobath):
+  # distances between each sighting and nearest point on coastline
+  d_shore <- dist2isobath(bat, dat$Longitude, dat$Latitude,
+                          isobath = 0)
+  # in km instead of metres
+  d_shore$distance <- d_shore$distance/1000 
+  dat$DistToShore <- d_shore$distance
+  
+  #Save data
+  write_csv(dat, path_file)
+}
+
+

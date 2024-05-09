@@ -71,13 +71,16 @@ fishing <- list.files(folder_path, pattern = "*GFW*.csv", full.names = T) %>% re
     pols <- 
       gpe3_error_polys(folder_path = folder_path, 
                        prob = 0.99, 
-                       verbose = F) %>% 
+                       verbose = T) %>% 
       mutate(Ptt = factor(Ptt))
+    
+    pol_sum %>% mapview()
+    
+    write_sf(pols, "GPE3_error_polygons.geojson")
+    
       
-    pol_sum <-
-      pols %>% 
-      st_shift_longitude()
-      
+    a <- st_read("GPE3_error_polygons.geojson")
+    
     
     ## Leaflet plot
     mytext = paste(
@@ -88,22 +91,10 @@ fishing <- list.files(folder_path, pattern = "*GFW*.csv", full.names = T) %>% re
       "Latitude: ", pos_dat$lat, sep="") %>%
       lapply(htmltools::HTML)
     
-    # m1 <- 
-      mapview(pos_sf, zcol = "month", burst = T, alpha = 0, alpha.regions = 1,
-              cex = 2, legend = F, homebutton = F) +
-      mapview(pos_path, burst = T, cex = 2, legend = F, homebutton = F)
-        
+    i = 1
     
-    m1@map %>% 
-      addTimeslider(data = pol_sum %>% filter(error_level %in% "0.99"),
-                    stroke = FALSE,
-                    options = timesliderOptions(
-                      position = "bottomright",
-                      timeAttribute = "date_time",
-                      range = FALSE,
-                      alwaysShowDate = TRUE,
-                      sameDate = TRUE,
-                      follow = TRUE))
+    tag <- pos_sf %>% filter(Ptt %in% unique(Ptt)[i])
+    tag_pol <- pols %>% filter(Ptt %in% unique(Ptt)[i])
     
     # myleafletplot <-
     leaflet() %>%
