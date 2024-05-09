@@ -10,7 +10,7 @@ rm(list=ls(all.names = TRUE)) # to clear workspace
 setwd("~/Documents/GitHub/IMOS-hackathon/2024/Projects/Fish-DAT/data/") # set up your respective directory
 
 #---- import data ----
-dat<-read.csv("47622/47622_daily-positions.csv",header=TRUE); head(dat)
+dat<-read.csv("227151/227151_daily-positions.csv",header=TRUE); head(dat)
 
 # lookup local timezone
 library(lutz)
