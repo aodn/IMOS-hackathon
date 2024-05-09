@@ -1,4 +1,4 @@
-PTT_ID,Species,TotalLength,Deployment_Date,Deployment_Location,Deployment_Lat,Deployment_Lon,Detachment_Date,Detachment_Lat,Detachment_Lon,Speed_Filter,gpe3_path
+Ptt,Species,TotalLength,Deployment_Date,Deployment_Location,Deployment_Lat,Deployment_Lon,Detachment_Date,Detachment_Lat,Detachment_Lon,Speed_Filter,gpe3_path
 227150,Kingfish,127,2022-12-06T00:00:00Z,Lord Howe Island,-31.77816,159.34932,2023-12-10T00:00:00Z,-32.0405,158.1221,1.75,2024/Projects/Fish-DAT/data/227150/227150-6-GPE3.nc
 227151,Kingfish,108,2022-03-25T00:00:00Z,Sydney,-33.97402,151.3569,2022-06-18T00:00:00Z,-35.233,151.151,2.25,2024/Projects/Fish-DAT/data/227151/227151-15-GPE3.nc
 47618,Silky Shark,230,2019-02-02T00:00:00Z,Cook Islands,-21.925,-160.3,2019-07-11T00:00:00Z,-19.625,-166.125,1.5,2024/Projects/Fish-DAT/data/47618/47618-7-GPE3.nc
