@@ -4,12 +4,6 @@
 ## ------------------------------------------------------------------------------------------ ##
 rm(list=ls()) # to clear workspace
 
-# Set working directory
-setwd("IMOS-hackathon/2024/Projects/Fish-DAT/data/") # set manually to your own working directory
-
-setwd("~/Documents/GitHub/IMOS-hackathon/2024/Projects/Fish-DAT/data") # set manually to your own working directory
-
-
 # Load the data
 library(data.table)
 track <- fread("2024/Projects/Fish-DAT/data/kingfish/227151/227151_daily-positions.csv"); head(track) # set manually to the right file you wish to load
