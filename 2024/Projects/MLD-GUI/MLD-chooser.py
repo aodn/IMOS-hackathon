@@ -12,7 +12,6 @@ os.chdir('C:\\Users\\mphem\\OneDrive - UNSW\\Work\\QAQC_NRT_AODNhackathon_2024\\
          'AODNhackathon\\aodn-hackathon\\2024\\Projects\\MLD-GUI')
 
 import tkinter as tk
-from tkinter import filedialog
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import PickleStuff as ps # functions to save/load pickle files
@@ -35,34 +34,36 @@ def get_season(date):
         return 'Summer'
 
 # %% ----------------------------------------------------------------------------
-# Load data
+# Load data and setup for GUI
 
 PSAL = ps.PickleLoad('Data\PH100CTD_PSAL.pickle')
 TEMP = ps.PickleLoad('Data\PH100CTD_TEMP.pickle')
+DENS = ps.PickleLoad('Data\PH100CTD_DENS.pickle')
 
 # example profiles for testing
 nprofs = 3
 un_t = np.unique(PSAL['PH100']['PSAL'].TIME.values)
 random_selection = np.random.choice(un_t, size=nprofs)
-CTDs = {}
+
 temperature_profiles = []
+salinity_profiles = []
+density_profiles = []
 dates = []
 times = []
 seasons = []
+
 for n in range(len(random_selection)):
     c = PSAL['PH100']['PSAL'].TIME.values == random_selection[n]
-    # CTDs[str(n)] = list(zip(PSAL['PH100']['PSAL'].DEPTH.values[c],
-    #                    PSAL['PH100']['PSAL'].values[c], 
-    #                    TEMP['PH100']['TEMP'].values[c]))
     
     # Combine arrays into tuples
     TEMP_tuple = (TEMP['PH100']['TEMP'].DEPTH.values[c], TEMP['PH100']['TEMP'].values[c])
-    
-    # PSAL_tuple = (PSAL['PH100']['PSAL'].DEPTH.values[c], PSAL['PH100']['PSAL'].values[c])
-    # Create the desired structure
-    # data = [TEMP_tuple, PSAL_tuple]
+    PSAL_tuple = (PSAL['PH100']['PSAL'].DEPTH.values[c], PSAL['PH100']['PSAL'].values[c])
+    DENS_tuple = (DENS['PH100']['DENS'].DEPTH.values[c], DENS['PH100']['DENS'].values[c])
+
     
     temperature_profiles.append(TEMP_tuple)
+    salinity_profiles.append(PSAL_tuple)
+    density_profiles.append(DENS_tuple)
     
     # get other information
     # Given numpy.datetime64 object
@@ -79,32 +80,31 @@ for n in range(len(random_selection)):
     times.append(str(time_component)[0:5])
     seasons.append(get_season(random_selection[n]))
 
-# max depth use for ylimit
-
+site = 'PH100'
 
 # %% ----------------------------------------------------------------------------
-fontsize=16
 
 class OceanProfileGUI:
-    def __init__(self, root, temperature_profiles):
+    def __init__(self, root, temperature_profiles, salinity_profiles, density_profiles, dates, times, seasons, site):
         self.root = root
-        self.root.title("Mixed Layer Depth Analysis Software")
+        self.root.title("Ocean Profile Analysis")
 
+        self.site = site
+        self.dates = dates
+        self.times = times
+        self.seasons = seasons
         self.temperature_profiles = temperature_profiles
+        self.salinity_profiles = salinity_profiles
+        self.density_profiles = density_profiles
         self.num_profiles = len(temperature_profiles)
         self.current_profile_index = 0  # Index of the currently displayed profile
 
-        self.canvas = plt.figure(figsize=(6, 4))
-        self.plot_area = self.canvas.add_subplot(111)
-        self.plot_area.set_xlabel("Temperature (°C)", fontsize=fontsize)
-        self.plot_area.set_ylabel("Depth (m)", fontsize=fontsize)
-        # Set font size for tick labels
-        self.plot_area.tick_params(axis='both', which='major', labelsize=14)
+        # Create a figure with one subplot
+        self.fig, self.plot_area = plt.subplots(figsize=(8, 6))
 
-        depth, temperature = temperature_profiles[self.current_profile_index]
-        self.plot_area.plot(temperature, depth)
-        self.plot_area.grid(True)  # Enable grid lines
-        self.canvas_widget = FigureCanvasTkAgg(self.canvas, master=root)
+        self.update_profiles()  # Initial plot update
+
+        self.canvas_widget = FigureCanvasTkAgg(self.fig, master=root)
         self.canvas_widget.get_tk_widget().pack(side=tk.LEFT, fill=tk.BOTH, expand=True)  # Fill window and expand to fit
 
         self.selected_depth = None
@@ -124,7 +124,52 @@ class OceanProfileGUI:
         self.next_button.pack()
 
         # Store the reference to the red dashed line
-        self.red_line = None
+        self.red_lines = []
+
+    def update_profiles(self):
+        self.plot_area.clear()
+
+        # Plot temperature data
+        depth, temperature = self.temperature_profiles[self.current_profile_index]
+        self.plot_area.plot(temperature, depth, label='Temperature (°C)')
+        self.plot_area.set_xlabel("Temperature (°C)")
+        self.plot_area.set_ylabel("Depth (m)")
+        
+        # Invert the y-axis
+        self.plot_area.invert_yaxis()
+        
+        # Add annotation
+        annotation_text = (self.site + ' ' + self.dates[self.current_profile_index] + ' ' 
+                           + self.times[self.current_profile_index] + ' (' 
+                           + self.seasons[self.current_profile_index] + ')')# Annotation text
+        annotation_x = 0.5  # X-coordinate of annotation
+        annotation_y = -0.13  # Y-coordinate of annotation 
+        
+        # Annotate the plot
+        self.plot_area.text(annotation_x, annotation_y, annotation_text,
+                            horizontalalignment='center',
+                            verticalalignment='bottom',
+                            fontsize=12,
+                            transform=self.plot_area.transAxes)
+        
+
+        # Plot salinity data on secondary y-axis
+        depth, salinity = self.salinity_profiles[self.current_profile_index]
+        salinity_axis = self.plot_area.twiny()
+        salinity_axis.plot(salinity, depth, label='Salinity', color='orange')
+        salinity_axis.set_xlabel("Salinity")
+
+        # Plot density data on secondary y-axis, slightly higher than salinity axis
+        depth, density = self.density_profiles[self.current_profile_index]
+        density_axis = self.plot_area.twiny()
+        density_axis.plot(density, depth, label='Density', color='green')
+        density_axis.set_xlabel("Density [kg m-3]")
+        density_axis.spines['top'].set_position(('outward', 30))  # Adjust the position of the density axis
+
+        # Combine the legends
+        self.plot_area.legend(loc='upper right')
+
+        self.plot_area.grid(True)  # Add grid lines
 
     def load_next_profile(self):
         # Record the last clicked depth if available before moving to the next profile
@@ -134,16 +179,9 @@ class OceanProfileGUI:
         # Load and plot the next profile if not all profiles have been displayed
         if self.current_profile_index < self.num_profiles - 1:
             self.current_profile_index += 1
-            self.plot_area.clear()
-            depth, temperature = self.temperature_profiles[self.current_profile_index]
-            self.plot_area.plot(temperature, depth)
-            self.plot_area.grid(True)  # Enable grid lines
-            self.selected_depth = None  # Reset selected depth for the new profile
-
-            # Reset reference to red dashed line
-            self.red_line = None
-
+            self.update_profiles()  # Update plot with new data
             self.update_side_box()  # Update the side box with current profile index
+            self.remove_red_lines()  # Remove previous red lines
             self.canvas_widget.draw()
         else:
             # Close the GUI if all profiles have been displayed
@@ -156,20 +194,13 @@ class OceanProfileGUI:
             depth = event.ydata
             self.update_side_box(hover_depth=depth)  # Update the side box with current profile index and hover depth
 
-            # Get the current plot size
-            canvas_width, canvas_height = self.canvas_widget.get_tk_widget().winfo_width(), self.canvas_widget.get_tk_widget().winfo_height()
-
-            # Calculate the position of the red dashed line based on the plot size
-            x_left, x_right = self.plot_area.get_xlim()
-            y_bottom, y_top = self.plot_area.get_ylim()
-            x_data = (event.x - 70) / canvas_width * (x_right - x_left) + x_left  # Adjust x-coordinate for padding
-            y_data = event.y / canvas_height * (y_top - y_bottom) + y_bottom
-
             # Draw red horizontal dashed line following cursor
-            if self.red_line is not None:
-                self.red_line.set_ydata(y_data)
+            if self.red_lines:
+                for red_line in self.red_lines:
+                    red_line.set_ydata(depth)
             else:
-                self.red_line = self.plot_area.axhline(y_data, color='r', linestyle='--')
+                red_line = self.plot_area.axhline(depth, color='r', linestyle='--')
+                self.red_lines.append(red_line)
 
             self.canvas_widget.draw()
 
@@ -188,12 +219,18 @@ class OceanProfileGUI:
         if hover_depth is not None:
             self.side_box.insert(tk.END, f"Depth: {hover_depth:.2f} m\n")
 
+    def remove_red_lines(self):
+        for red_line in self.red_lines:
+            red_line.remove()
+        self.red_lines.clear()
+
+
 if __name__ == "__main__":
-    # Assuming temperature_profiles is the variable containing the loaded profiles
+    # Assuming temperature_profiles, salinity_profiles, and density_profiles are the variables containing the loaded profiles
 
     # Create the GUI
     root = tk.Tk()
-    gui = OceanProfileGUI(root, temperature_profiles)
+    gui = OceanProfileGUI(root, temperature_profiles, salinity_profiles, density_profiles, dates, times, seasons, site)
     root.mainloop()
 
     # Output recorded depths

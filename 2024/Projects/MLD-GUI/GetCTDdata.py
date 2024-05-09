@@ -56,8 +56,24 @@ for s in sites:
     
     # get data
     CTDdata_PSAL[s] = agg.AggregateProfiles(link,'PSAL')
+    
+CTDdata_DENS = {}
+for s in sites:
+
+    # get correct link for downloading data
+    link = 0
+    if 'NRS' in s:
+        link = 'https://thredds.aodn.org.au/thredds/catalog/IMOS/ANMN/NRS/' + s + '/Biogeochem_profiles/catalog.html'
+    if link == 0:
+        link = 'https://thredds.aodn.org.au/thredds/catalog/IMOS/ANMN/NSW/' + s + '/Biogeochem_profiles/catalog.html'
+    print(link)
+    
+    # get data
+    CTDdata_DENS[s] = agg.AggregateProfiles(link,'DENS')
 
 # %% save data as a pickle
 
 ps.PickleSave('Data\\PH100CTD_TEMP.pickle', CTDdata_TEMP)
 ps.PickleSave('Data\\PH100CTD_PSAL.pickle', CTDdata_PSAL)
+ps.PickleSave('Data\\PH100CTD_DENS.pickle', CTDdata_DENS)
+
