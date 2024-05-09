@@ -1,0 +1,3 @@
+jupyterlab
+ipython
+xarray[complete]
