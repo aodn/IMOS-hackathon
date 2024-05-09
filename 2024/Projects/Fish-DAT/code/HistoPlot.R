@@ -91,7 +91,7 @@ histoplot <- function(tag_ids = c("47618"),
   spec_dat <- fs::dir_ls(folder_path, glob = "*metadata*.csv", ignore.case = TRUE)
   spec_dat <- read_csv(spec_dat) %>% 
     rename_with(.cols = everything(), .fn = tolower) %>% 
-    mutate(id = as.character(ptt_id)) %>% 
+    mutate(id = as.character(ptt)) %>% 
     select(id, species)
   
   
