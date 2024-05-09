@@ -128,7 +128,7 @@ gpe3_error_polys <-
 #   addProviderTiles(providers$OpenStreetMap, group="Map") %>%   # Street Map view
 #   # addProviderTiles(providers$Esri.WorldImagery, group="Satellite") %>%   # typical Google Earth satellite view
 #   # add error polys
-#   addTimeslider(data = pols %>% filter(error_level %in% "0.99"), 
+#   addTimeslider(data = pols %>% filter(error_level %in% "0.99"),
 #                 stroke = FALSE,
 #                 options = timesliderOptions(
 #                   position = "bottomright",
@@ -145,7 +145,7 @@ gpe3_error_polys <-
 #   group_by(Ptt) %>%
 #   summarise(do_union = T) %>% 
 #   st_as_sf()
-sf::sf_use_s2(TRUE)
+# sf::sf_use_s2(TRUE)
 
 
 

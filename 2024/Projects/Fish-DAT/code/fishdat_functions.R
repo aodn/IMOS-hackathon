@@ -4,8 +4,9 @@
 # Libraries ---------------------------------------------------------------
 library(tidyverse)
 library(traipse)
-library(lutz)
 library(marmap)
+library(data.table)
+library(janitor)
 
 # Calculate daily metrics -------------------------------------------------
 # Calculate temperature min, mean, max for each location 
@@ -177,5 +178,62 @@ compute_distances <- function(path_daily, save_bathy_path){
   #Save data
   write_csv(dat, path_file)
 }
+
+
+# Summarise GPE3 output data - local time, daily location -----------------
+daily_positions <- function(file_path){
+  #Load data
+  dat <- fread(file_path) %>% 
+    as.data.frame() %>% 
+    clean_names()
+  
+  #Getting tag ID
+  ptt_id <- unique(dat$ptt)
+  
+  # lookup local timezone
+  timeZ <- tz_lookup_coords(lat = dat$most_likely_latitude, 
+                               lon = dat$most_likely_longitude,
+                               method = "accurate")
+  timeZ <- timeZ
+  
+  # Do time conversion and extract Date and Time as separate columns
+  dat$datetime.UTC <- as.POSIXct(as.character(dat$Date), 
+                                 format = "%d-%b-%Y %H:%M:%S", tz = "UTC",
+                                 origin = "1970-01-01")
+  dat$datetime.LOCAL <- as.POSIXlt(dat$datetime.UTC, tz = timeZ)
+  dat$time <- format(as.POSIXct(dat$datetime.LOCAL, 
+                                format = "%Y:%m:%d %H:%M:%S"), 
+                     "%H:%M:%S")
+  dat$date <- format(as.POSIXct(dat$datetime.LOCAL, 
+                                format = "%Y:%m:%d %H:%M:%S"),
+                     "%Y-%m-%d")
+  
+  # Calculate average daily position based on 4 raw/estimated locations per day
+  track <- dat %>%
+    group_by(date) %>%
+    summarise(ptt = unique(ptt), Latitude = mean(most_likely_latitude),
+              Longitude = mean(most_likely_longitude))
+  # Deleting the first and last location of track data to be replaced with more accurate locations 
+  
+  #Replacing first and last location with know deployment and pop-off location
+  #load the masterfile with the known release (deployment) and detachments (pop-off) locations
+  rawdata <- fread("HackathonMetadata.csv")
+  #Replacing deployment longitude and latitude
+  x = rawdata[which(rawdata$PTT_ID == ptt_id),]
+  track$Latitude[1] <- x$Deployment_Lat
+  track$Longitude[1] <- x$Deployment_Lon
+  #Replacing detachment longitude and latitude (need to check what row of each data you are transferring over)
+  track$Latitude[nrow(track)] <- x$Detachment_Lat
+  #not sure why this line of code isn't working
+  track$Longitude[nrow(track)] <- x$Detachment_Lon[1] 
+  
+  track <- track %>% 
+    mutate(day.at.liberty = 1:n())
+  track$month <- format(as.POSIXct(track$date, format="%Y-%m-%d"), "%b")
+  
+  #Save sample data
+  write_csv(track, file_path)
+}
+
 
 
