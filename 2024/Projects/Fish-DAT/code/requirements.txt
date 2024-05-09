@@ -1,5 +1,6 @@
 # Python libraries needed to run the scripts in this project
 # Can be installed using pip install -r requirements.txt
+numpy
 pandas
 requests
 xarray[io]

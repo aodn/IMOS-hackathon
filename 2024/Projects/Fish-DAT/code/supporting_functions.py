@@ -1,6 +1,7 @@
 # Loading libraries
 import json
 
+import numpy as np
 import pandas as pd
 import requests
 import xarray as xr
@@ -34,19 +35,33 @@ def bb_from_gpe3(filename: str, tag_id: str) -> dict:
 
 
 def get_fishing_effort(
-    token: str, date_start: str, date_end: str, bbox: dict
+    token: str, date_start: np.datetime64, date_end: np.datetime64, bbox: dict
 ) -> pd.DataFrame:
     """
     Get fishing effort data from 4wings report endpoint.
     Returns a pandas dataframe with fishing_hours, lat, lon columns,
     and one row for each cell.
     """
+
+    # If the date range is more than a year, call this function on 1-year chunks
+    # and merge the results together
+    if date_end - date_start > np.timedelta64(366, 'D'):
+        date_chunks = pd.date_range(date_start, date_end, freq='365D')
+        date_chunks = [
+            (date_chunks[i], date_chunks[i + 1]) for i in range(len(date_chunks) - 1)
+        ]
+        tables = [
+            get_fishing_effort(token, start, end, bbox) for start, end in date_chunks
+        ]
+        return pd.concat(tables)
+
     ptt = bbox['PTT']
     keys = ['min_lon', 'min_lat', 'max_lon', 'max_lat']
     bbox = [bbox[k] for k in keys]
 
     endpoint = f"https://gateway.api.globalfishingwatch.org/v3/4wings/report"
     auth_header = {"Authorization": f"Bearer {token}"}
+
     query_params = {
         "spatial-resolution": "HIGH",
         "temporal-resolution": "ENTIRE",
