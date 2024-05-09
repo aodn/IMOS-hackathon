@@ -64,8 +64,18 @@ body <- dashboardBody(
       tags$a(
         href = "https://www.globalfishingwatch.org",
         "Powered by Global Fishing Watch"
-      )
+      ),
+      fluidRow(
+        column(
+          width = 8
+          ),
+        column(
+          width = 4,
+          plotOutput("divePlot")
+          )
+        )
     ),
+    
     # column(
     #   width = 4,
     #   plotOutput("divePlot"),
@@ -271,13 +281,10 @@ server <- function(input, output, session) {
   #     labs(title = "Dive Profile Over Time", x = "Date", y = "Depth (m)")
   # })
   #
-  # # Bar plot of dive depth
-  # output$divePlot <- renderPlot({
-  #   ggplot(data(), aes(x = factor(TagID), y = DiveDepth)) +
-  #     geom_bar(stat = "identity", fill = "steelblue") +
-  #     theme_minimal() +
-  #     labs(title = "Dive Depth Distribution", x = "Tag ID", y = "Depth (m)")
-  # })
+  # Bar plot of dive depth
+  output$divePlot <- renderPlot({
+    histoplot(tag_ids = as.character(input$tagID), folder_path = basedir)
+  })
   #
   # # Scatter plot of fish behaviour variable
   # output$behaviourPlot <- renderPlot({
