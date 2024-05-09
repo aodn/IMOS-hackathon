@@ -41,67 +41,80 @@ PSAL = ps.PickleLoad('Data\PH100CTD_PSAL.pickle')
 TEMP = ps.PickleLoad('Data\PH100CTD_TEMP.pickle')
 
 # example profiles for testing
-nprofs = 10
-un_t = np.unique(PSAL['PH100']['PSAL'].TIME.values)
-random_selection = np.random.choice(un_t, size=nprofs)
-
-temperature_profiles = []
-salinity_profiles = []
-density_profiles = []
-dates = []
-times = []
-seasons = []
-
-lon = TEMP['PH100']['TEMP'].LONGITUDE.median()
-lat = TEMP['PH100']['TEMP'].LATITUDE.median()
-
-for n in range(len(random_selection)):
-    c = PSAL['PH100']['PSAL'].TIME.values == random_selection[n]
-    
-    # Combine arrays into tuples
-    TEMP_tuple = (TEMP['PH100']['TEMP'].DEPTH.values[c], TEMP['PH100']['TEMP'].values[c])
-    PSAL_tuple = (PSAL['PH100']['PSAL'].DEPTH.values[c], PSAL['PH100']['PSAL'].values[c])
-
-    # QC the data set
-    TEMP_QC = TEMP['PH100']['TEMP_quality_control'].values[c];
-    TEMP_tuple[1][TEMP_QC != 1] = np.nan
-    PSAL_QC = PSAL['PH100']['PSAL_quality_control'].values[c];
-    PSAL_tuple[1][PSAL_QC != 1] = np.nan
-
-    temperature_profiles.append(TEMP_tuple)
-    salinity_profiles.append(PSAL_tuple)
-    
-    # calculate density
-    lon_arr = np.ones(len(salinity_profiles[n][1]))*lon.values
-    lat_arr = np.ones(len(salinity_profiles[n][1]))*lat.values
-    SA = gsw.SA_from_SP(salinity_profiles[n][1],
-                          salinity_profiles[n][0],
-                          lon_arr,lat_arr)
-    CT = gsw.CT_from_t(SA,temperature_profiles[n][1],temperature_profiles[n][0])
-    rho = gsw.rho(SA,CT,temperature_profiles[n][0])
-
-    DENS_tuple = (temperature_profiles[n][0],rho)
-    
-    density_profiles.append(DENS_tuple)
-    
-    # get other information
-    # Given numpy.datetime64 object
-    datetime_obj = random_selection[n]
-    
-    # Convert to Python datetime object
-    python_datetime_obj = datetime.utcfromtimestamp(datetime_obj.astype('O') / 1e9)
-    
-    # Extract date and time components
-    date_component = python_datetime_obj.date()
-    time_component = python_datetime_obj.time()
-
-    dates.append(str(date_component))
-    times.append(str(time_component)[0:5])
-    seasons.append(get_season(random_selection[n]))
-
+nprofs = 5
 site = 'PH100'
+unique_dates = np.unique(PSAL[site]['PSAL'].TIME.values)
 
 # %% ----------------------------------------------------------------------------
+# function to get randomly selected profiles
+
+def getProfiles(unique_dates, nprofs, site, PSAL, TEMP):
+    # get random indices with length nprofs
+    random_selection = np.random.choice(unique_dates, size=nprofs)
+    # create lists to fill
+    temperature_profiles = []
+    salinity_profiles = []
+    density_profiles = []
+    dates = []
+    times = []
+    seasons = []
+    # lon and lat
+    lon = TEMP[site]['TEMP'].LONGITUDE.median()
+    lat = TEMP[site]['TEMP'].LATITUDE.median()
+
+    for n in range(len(random_selection)):
+        c = PSAL[site]['PSAL'].TIME.values == random_selection[n]
+        
+        # Combine arrays into tuples
+        TEMP_tuple = (TEMP[site]['TEMP'].DEPTH.values[c], TEMP[site]['TEMP'].values[c])
+        PSAL_tuple = (PSAL[site]['PSAL'].DEPTH.values[c], PSAL[site]['PSAL'].values[c])
+    
+        # QC the temperature and salinity data set
+        TEMP_QC = TEMP[site]['TEMP_quality_control'].values[c];
+        TEMP_tuple[1][TEMP_QC != 1] = np.nan
+        PSAL_QC = PSAL[site]['PSAL_quality_control'].values[c];
+        PSAL_tuple[1][PSAL_QC != 1] = np.nan
+    
+        # add TEMP and PSAL to lists
+        temperature_profiles.append(TEMP_tuple)
+        salinity_profiles.append(PSAL_tuple)
+        
+        # calculate in situ density using TEMP and PSAL
+        lon_arr = np.ones(len(salinity_profiles[n][1]))*lon.values
+        lat_arr = np.ones(len(salinity_profiles[n][1]))*lat.values
+        SA = gsw.SA_from_SP(salinity_profiles[n][1],
+                              salinity_profiles[n][0],
+                              lon_arr,lat_arr)
+        CT = gsw.CT_from_t(SA,temperature_profiles[n][1],temperature_profiles[n][0])
+        rho = gsw.rho(SA,CT,temperature_profiles[n][0])
+        
+        # add DENS to list
+        DENS_tuple = (temperature_profiles[n][0],rho)
+        density_profiles.append(DENS_tuple)
+        
+        # extract date and time for plot
+        
+        # Given numpy.datetime64 object
+        datetime_obj = random_selection[n]
+        # Convert to Python datetime object
+        python_datetime_obj = datetime.utcfromtimestamp(datetime_obj.astype('O') / 1e9)
+        # Extract date and time components
+        date_component = python_datetime_obj.date()
+        time_component = python_datetime_obj.time()
+        # save dates, times, seasons
+        dates.append(str(date_component))
+        times.append(str(time_component)[0:5])
+        seasons.append(get_season(random_selection[n]))
+        
+    return temperature_profiles, salinity_profiles, density_profiles, dates, times, seasons
+
+# %% ----------------------------------------------------------------------------
+# get profiles for GUI
+
+temperature_profiles, salinity_profiles, density_profiles, dates, times, seasons = getProfiles(
+                                                                    unique_dates, nprofs, site, PSAL, TEMP)
+# %% ----------------------------------------------------------------------------
+# GUI to display profiles for MLD selection
 
 class OceanProfileGUI:
     def __init__(self, root, temperature_profiles, salinity_profiles, density_profiles, dates, times, seasons, site,
