@@ -53,7 +53,9 @@ def get_fishing_effort(
         tables = [
             get_fishing_effort(token, start, end, bbox) for start, end in date_chunks
         ]
-        return pd.concat(tables)
+        # Sum the fishing hours for each cell
+        table = pd.concat(tables).groupby(['lat', 'lon']).sum().reset_index()
+        return table
 
     ptt = bbox['PTT']
     keys = ['min_lon', 'min_lat', 'max_lon', 'max_lat']
@@ -63,7 +65,7 @@ def get_fishing_effort(
     auth_header = {"Authorization": f"Bearer {token}"}
 
     query_params = {
-        "spatial-resolution": "HIGH",
+        "spatial-resolution": "LOW",
         "temporal-resolution": "ENTIRE",
         "date-range": f"{date_start.strftime('%Y-%m-%d')},{date_end.strftime('%Y-%m-%d')}",
         "datasets[0]": "public-global-fishing-effort:latest",
