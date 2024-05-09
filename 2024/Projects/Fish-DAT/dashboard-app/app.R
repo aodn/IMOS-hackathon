@@ -1,26 +1,58 @@
-## Boilerplate code created by ChatGPT 4
+## Boilerplate code created by ChatGPT
 
 library(shiny)
 library(shinyWidgets)
 library(leaflet)
 library(dplyr)
 library(ggplot2)
+library(shinydashboard)
+
+
+# Get choices for species and tag ID
+basedir <- "../data/"
+metadata <- read_csv(paste0(basedir, "HackathonMetadata.csv"))
+
+# detect numeric dir filenames
+tag_ids <- metadata$PTT_ID
+species_id <- metadata$Species %>% unique()
+
+# # construct file path
+# fn <- list.files(paste0(basedir, dirs[1]), pattern = "daily-positions.csv", full.names = TRUE)
 
 # Define UI
-ui <- fluidPage(
+
+
+header <- dashboardHeader(
+  title = "Fish Tracking Dashboard"
+)
+
+sidebar <- dashboardSidebar(
+  # sidebarMenu(
+  #   menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
+  #   menuItem("Visualizations", tabName = "visualizations", icon = icon("bar-chart-o")),
+  #   menuItem("Maps", tabName = "maps", icon = icon("map"))
+  # )
+)
+
+body <- dashboardBody(
   titlePanel("Fish Tracking Dashboard"),
   fluidRow(
     column(width = 4,
            pickerInput("species", "Species:",
-                       choices = c("Species 1", "Species 2"), 
-                       multiple = TRUE, options = list(`actions-box` = TRUE)),
+                       choices = species_id, 
+                       options = list(`actions-box` = TRUE),
+                       selected = species_id[1]),
            pickerInput("tagID", "Tag ID:",
-                       choices = c("ID 1", "ID 2"), 
-                       multiple = TRUE, options = list(`actions-box` = TRUE)),
-           dateRangeInput("dateRange", "Date Range:"),
-           textInput("region", "Deployment Region:"),
-           textInput("angler", "Tagging Angler:"),
-           verbatimTextOutput("infoBox")
+                       choices = NULL, 
+                       options = list(`actions-box` = TRUE)),
+           infoBoxOutput("totalLength", width= NULL),
+           infoBoxOutput("deploymentLocation", width= NULL),
+           infoBoxOutput("deploymentDate", width= NULL),
+           
+           infoBoxOutput("detachmentDate", width= NULL),
+           infoBoxOutput("detachmentLocation", width= NULL),
+           
+
     ),
     column(width = 4,
            plotOutput("fishPlot"),
@@ -33,8 +65,83 @@ ui <- fluidPage(
   )
 )
 
+ui <- dashboardPage(
+  header, sidebar, body
+)
+
 # Define server logic
-server <- function(input, output) {
+server <- function(input, output, session) {
+  
+  # Update species choices directly in the server
+  # Observe any changes in the species selection
+  observe({
+    # Filter tag IDs based on selected species
+    if (!is.null(input$species)) {
+      validTags <- metadata %>%
+        filter(Species %in% input$species) %>%
+        pull(PTT_ID) %>%
+        unique()
+      updatePickerInput(session, "tagID", choices = validTags)
+    }
+  })
+  
+  # infoBoxes
+  output$totalLength <- renderInfoBox({
+    req(input$tagID)
+    data <- metadata[metadata$PTT_ID == input$tagID, ]
+    infoBox(
+      title = "Total Length",
+      value = paste0(data$TotalLength, 'm'),
+      icon = icon("ruler"),
+      color = "blue"
+    )
+  })
+  
+  output$deploymentDate <- renderInfoBox({
+    req(input$tagID)
+    data <- metadata[metadata$PTT_ID == input$tagID, ]
+    infoBox(
+      title = "Deployment Date",
+      value = data$Deployment_Date,
+      icon = icon("calendar-plus"),
+      color = "green"
+    )
+  })
+  
+  output$detachmentDate <- renderInfoBox({
+    req(input$tagID)
+    data <- metadata[metadata$PTT_ID == input$tagID, ]
+    infoBox(
+      title = "Detachment Date",
+      value = data$Detachment_Date,
+      icon = icon("calendar-minus"),
+      color = "red"
+    )
+  })
+  
+  output$deploymentLocation <- renderInfoBox({
+    req(input$tagID)
+    data <- metadata[metadata$PTT_ID == input$tagID, ]
+    text <- paste(data$Deployment_Location, round(data$Deployment_Lat, 2), round(data$Deployment_Lon, 2), sep = ", ")
+    infoBox(
+      title = "Deployment Location",
+      value = text,
+      icon = icon("map-marker"),
+      color = "green"
+    )
+  })
+  
+  output$detachmentLocation <- renderInfoBox({
+    req(input$tagID)
+    data <- metadata[metadata$PTT_ID == input$tagID, ]
+    text <- paste(round(data$Detachment_Lat, 2), round(data$Detachment_Lon, 2), sep = ", ")
+    infoBox(
+      title = "Detachment Location",
+      value = text,
+      icon = icon("map-marker"),
+      color = "red"
+    )
+  })
   
   # Sample data - replace this with your actual dataset
   data <- reactive({
@@ -51,7 +158,7 @@ server <- function(input, output) {
     df <- df[df$Species %in% input$species & df$TagID %in% input$tagID,]
     df
   })
-  
+
   # Information box output
   output$infoBox <- renderPrint({
     if (nrow(data()) > 0) {

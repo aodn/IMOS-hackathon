@@ -53,8 +53,9 @@ def get_fishing_effort(
         tables = [
             get_fishing_effort(token, start, end, bbox) for start, end in date_chunks
         ]
-        # Sum the fishing hours for each cell
+        # Sum the fishing hours for each cell, but not the PTT
         table = pd.concat(tables).groupby(['lat', 'lon']).sum().reset_index()
+        table['PTT'] = bbox['PTT']
         return table
 
     ptt = bbox['PTT']

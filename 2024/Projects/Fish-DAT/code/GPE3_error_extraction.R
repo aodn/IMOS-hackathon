@@ -75,7 +75,7 @@ gpe3_error_polys <-
           left_join(rast_timestamp, by = "twelve_hour") %>% 
           dplyr::select(-twelve_hour) %>% 
           rename(date_time = twelve_hour_timestamps) %>% 
-          mutate(Ptt = id)
+          mutate(Ptt = factor(id))
         
         error_contour
         
