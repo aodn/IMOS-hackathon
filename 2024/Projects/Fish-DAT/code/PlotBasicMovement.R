@@ -4,12 +4,6 @@
 ## ------------------------------------------------------------------------------------------ ##
 rm(list=ls()) # to clear workspace
 
-# Set working directory
-setwd("IMOS-hackathon/2024/Projects/Fish-DAT/data/") # set manually to your own working directory
-
-setwd("~/Documents/GitHub/IMOS-hackathon/2024/Projects/Fish-DAT/data/kingfish/") # set manually to your own working directory
-
-
 # Load the data
 library(data.table)
 track <- fread("2024/Projects/Fish-DAT/data/kingfish/227151/227151_daily-positions.csv"); head(track) # set manually to the right file you wish to load
@@ -25,6 +19,7 @@ library(data.table)
 library(sf)
 library(ggspatial)
 library(leaflet)
+library(leaflet.extras2)
 library(htmlwidgets)
 
 # Load the data
@@ -86,7 +81,7 @@ mytext = paste(
   "Latitude: ", track$Latitude, sep="") %>%
   lapply(htmltools::HTML)
 
-myleafletplot <-
+# myleafletplot <-
   leaflet() %>%
   # Base groups (you can add multiple basemaps):
   addProviderTiles(providers$OpenStreetMap, group="Map") %>%   # Street Map view

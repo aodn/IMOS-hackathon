@@ -13,14 +13,16 @@ library(sf)
 library(htmlwidgets)
 
 #Load data
-setwd("~/Documents/GitHub/IMOS-hackathon/2024/Projects/Fish-DAT/data/") # set manually to your own working directory
-track <- read.csv("227151/227151_daily-positions.csv"); head(track) # manual for now, needs to be automated depending on filter selection
-#photo <- "kingfish_test.jpg"
+base_dir <- "2024/Projects/Fish-DAT/data/"
+files <- list.files(base_dir, pattern = "daily-positions.csv", full.names = TRUE, recursive = TRUE)
+track <- read_csv(files[1])
 
 #Create map
 
 #Create a custom color scale
-monthly_colour_palette <- read.csv("monthly_colour_palette.csv", header=TRUE); head(monthly_colour_palette)
+monthly_colour_palette <- read_csv(paste0(
+  base_dir, "monthly_colour_palette.csv"
+)); head(monthly_colour_palette)
 myColors <- unique(monthly_colour_palette$colour)
 myColors <- setNames(myColors, unique(monthly_colour_palette$month))
 colScale <- scale_colour_manual(name = "Month:", values = myColors) 
@@ -32,7 +34,7 @@ track <- as.data.frame(track)
 # Convert data to Spatial Point Data Frame for mapping with correct projection
 library(sf); 
 track_sf <- track %>% 
-  st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326, remove = F) #WGS84
+  st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326, remove = F) 
 
 mytext = paste(
   "Date: ", track$`Date`, "<br/>",

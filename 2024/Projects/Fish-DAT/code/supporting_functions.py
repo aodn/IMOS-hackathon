@@ -1,6 +1,7 @@
 # Loading libraries
 import json
 
+import numpy as np
 import pandas as pd
 import requests
 import xarray as xr
@@ -8,7 +9,7 @@ import xarray as xr
 
 # Defining functions
 # Extracting bounding box from GPE3 necdf files
-def bb_from_gpe3(filename: str, tag_id: str) -> dict:
+def bb_from_gpe3(filename: str, tag_id: int) -> dict:
     '''
     Inputs:
       - filename - (string) Location of the GPE3 netcdf file
@@ -34,23 +35,40 @@ def bb_from_gpe3(filename: str, tag_id: str) -> dict:
 
 
 def get_fishing_effort(
-    token: str, date_start: str, date_end: str, bbox: dict
+    token: str, date_start: np.datetime64, date_end: np.datetime64, bbox: dict
 ) -> pd.DataFrame:
     """
     Get fishing effort data from 4wings report endpoint.
     Returns a pandas dataframe with fishing_hours, lat, lon columns,
     and one row for each cell.
     """
+
+    # If the date range is more than a year, call this function on 1-year chunks
+    # and merge the results together
+    if date_end - date_start > np.timedelta64(366, 'D'):
+        date_chunks = pd.date_range(date_start, date_end, freq='365D')
+        date_chunks = [
+            (date_chunks[i], date_chunks[i + 1]) for i in range(len(date_chunks) - 1)
+        ]
+        tables = [
+            get_fishing_effort(token, start, end, bbox) for start, end in date_chunks
+        ]
+        # Sum the fishing hours for each cell, but not the PTT
+        table = pd.concat(tables).groupby(['lat', 'lon']).sum().reset_index()
+        table['PTT'] = bbox['PTT']
+        return table
+
     ptt = bbox['PTT']
     keys = ['min_lon', 'min_lat', 'max_lon', 'max_lat']
     bbox = [bbox[k] for k in keys]
 
     endpoint = f"https://gateway.api.globalfishingwatch.org/v3/4wings/report"
     auth_header = {"Authorization": f"Bearer {token}"}
+
     query_params = {
-        "spatial-resolution": "HIGH",
+        "spatial-resolution": "LOW",
         "temporal-resolution": "ENTIRE",
-        "date-range": f"{date_start},{date_end}",
+        "date-range": f"{date_start.strftime('%Y-%m-%d')},{date_end.strftime('%Y-%m-%d')}",
         "datasets[0]": "public-global-fishing-effort:latest",
         "format": "JSON",
     }
@@ -88,7 +106,11 @@ def get_fishing_effort(
 
 
 def download_gfw_data(
-    filename: str, tag_id: str, token: str, date_start: str, date_end: str
+    filename: str,
+    tag_id: int,
+    token: str,
+    date_start: np.datetime64,
+    date_end: np.datetime64,
 ) -> pd.DataFrame:
     """
     Download GFW fishing effort data for a given tag ID and date range,
