@@ -44,7 +44,7 @@ library(fs)
 #       filter(HistType %in% c("TAD")) %>%
 #       mutate(date = lubridate::dmy_hms(paste(str_split(Date, pattern = " ", simplify = T)[,2],
 #                                              str_split(Date, pattern = " ", simplify = T)[,1])),
-#              id = as.character(Ptt)) %>%
+#              id = as.character(TAD)) %>%
 #       dplyr::select(id, date, contains("Bin"), -NumBins) %>%
 #       pivot_longer(-c(date, id), names_to = "Bins", values_to = "prop") %>%
 #       left_join(tad_bins, by = "Bins") %>%
@@ -56,7 +56,7 @@ library(fs)
 #       filter(HistType %in% c("TAT")) %>%
 #       mutate(date = lubridate::dmy_hms(paste(str_split(Date, pattern = " ", simplify = T)[,2],
 #                                              str_split(Date, pattern = " ", simplify = T)[,1])),
-#              id = as.character(Ptt)) %>%
+#              id = as.character(TAD)) %>%
 #       dplyr::select(id, date, contains("Bin"), -NumBins) %>%
 #       pivot_longer(-c(date, id), names_to = "Bins", values_to = "prop") %>%
 #       left_join(tat_bins, by = "Bins") %>%
@@ -146,7 +146,8 @@ histoplot <- function(tag_ids = c("47618"),
                              fill = id)
                ) +
               geom_bar(stat = "identity", 
-                       alpha = 0.5
+                       alpha = 0.5,
+                       show.legend = FALSE
                        ) +
               geom_errorbar(aes(xmin = prop_mean - prop_sd,
                                 xmax = prop_mean + prop_sd),
@@ -158,10 +159,11 @@ histoplot <- function(tag_ids = c("47618"),
               coord_cartesian(expand = TRUE
                               ) +
               ylab(expr(paste("Temp ("^"o","C)"))) +
-              xlab("Proportion of time (%)") +
+              # xlab("Proportion of time (%)") +
+              xlab("") +
           
-              theme_bw() +
-              theme(legend.position = "top")
+              theme_bw() #+
+              # theme(legend.position = "top")
       
       if(species){
         g_TAT <- g_TAT + geom_density(data = spec_TAT,
@@ -198,7 +200,7 @@ histoplot <- function(tag_ids = c("47618"),
                                         group = id,
                                         fill = id)) +
             geom_bar(stat = "identity", 
-                     alpha = 0.5) +
+                     alpha = 0.5, show.legend = FALSE) +
             geom_errorbar(aes(xmin = prop_mean - prop_sd,
                               xmax = prop_mean + prop_sd),
                           colour = "grey50",
@@ -208,9 +210,10 @@ histoplot <- function(tag_ids = c("47618"),
             coord_cartesian(expand = TRUE) +
             scale_y_discrete(limits=rev) +
             ylab("Depth (m)") +
-            xlab("Proportion of time (%)") +
-            theme_bw()  +
-            theme(legend.position = "top")
+            # xlab("Proportion of time (%)") +
+            xlab("") +
+            theme_bw() # +
+            # theme(legend.position = "top")
             if(species){
               g_TAD <- g_TAD + geom_density(data = spec_TAD,
                                             mapping = aes(y = bin,
@@ -224,13 +227,13 @@ histoplot <- function(tag_ids = c("47618"),
   
   # Deciding which plots to return
   if(TAD & TAT){
-    return(g_TAD + g_TAT)
+    return(g_TAD + g_TAT + plot_annotation(caption = "Proportion of time (%)", theme = theme(plot.caption = element_text(hjust = 0.5,size = 12))))
   }
   if(TAD & !TAT){
-    return(g_TAD)
+    return(g_TAD + plot_annotation(caption = "Proportion of time (%)", theme = theme(plot.caption = element_text(hjust = 0.5,size = 12))))
   }
   if(!TAD & TAT){
-    return(g_TAT)
+    return(g_TAT + plot_annotation(caption = "Proportion of time (%)", theme = theme(plot.caption = element_text(hjust = 0.5,size = 12))))
   }
  
   })
