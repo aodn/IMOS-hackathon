@@ -24,7 +24,10 @@ import gsw
 # Function to get season from datetime64
 
 def get_season(date):
-    month = date.astype('datetime64[M]').astype(int) % 12 + 1
+    # Convert datetime64 to string with format 'YYYY-MM'
+    date_str = np.datetime_as_string(date, unit='M')
+    # Extract month from the string
+    month = int(date_str.split('-')[1])
     if month in [3, 4, 5]:
         return 'Autumn'
     elif month in [6, 7, 8]:
@@ -275,16 +278,19 @@ class OceanProfileGUI:
         self.red_lines.clear()
 
 
-if __name__ == "__main__":
-    # Assuming temperature_profiles, salinity_profiles, and density_profiles are the variables containing the loaded profiles
+# if __name__ == "__main__":
+    # this means that the code has to be run directly here, and cannot be loaded into another
+    # script as an imported function
+    
+# Assuming temperature_profiles, salinity_profiles, and density_profiles are the variables containing the loaded profiles
 
-    # Create the GUI
-    root = tk.Tk()
-    gui = OceanProfileGUI(root, temperature_profiles, salinity_profiles, density_profiles, dates, times, seasons, site)
-    root.mainloop()
+# Create the GUI
+root = tk.Tk()
+gui = OceanProfileGUI(root, temperature_profiles, salinity_profiles, density_profiles, dates, times, seasons, site)
+root.mainloop()
 
-    # Output recorded depths
-    print("MLD Recorded Depths:", gui.recorded_depths)
+# Output recorded depths
+print("MLD Recorded Depths:", gui.recorded_depths)
 
 # %% ----------------------------------------------------------------------------
 # create dataframe and save output as a CSV
