@@ -9,7 +9,7 @@ import xarray as xr
 
 # Defining functions
 # Extracting bounding box from GPE3 necdf files
-def bb_from_gpe3(filename: str, tag_id: str) -> dict:
+def bb_from_gpe3(filename: str, tag_id: int) -> dict:
     '''
     Inputs:
       - filename - (string) Location of the GPE3 netcdf file
@@ -65,7 +65,7 @@ def get_fishing_effort(
     query_params = {
         "spatial-resolution": "HIGH",
         "temporal-resolution": "ENTIRE",
-        "date-range": f"{date_start},{date_end}",
+        "date-range": f"{date_start.strftime('%Y-%m-%d')},{date_end.strftime('%Y-%m-%d')}",
         "datasets[0]": "public-global-fishing-effort:latest",
         "format": "JSON",
     }
@@ -103,7 +103,11 @@ def get_fishing_effort(
 
 
 def download_gfw_data(
-    filename: str, tag_id: str, token: str, date_start: str, date_end: str
+    filename: str,
+    tag_id: int,
+    token: str,
+    date_start: np.datetime64,
+    date_end: np.datetime64,
 ) -> pd.DataFrame:
     """
     Download GFW fishing effort data for a given tag ID and date range,
