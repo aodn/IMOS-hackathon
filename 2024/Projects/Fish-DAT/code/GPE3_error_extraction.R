@@ -9,7 +9,7 @@ library(sf)
 ## (it only requires the path to the folder where -GPE3 files are found, and probability values)
 
 gpe3_error_polys <-
-  function(folder_path, prob, verbose = F){
+  function(folder_path, prob, verbose = F, aggregate = T){
     
     ## parse all the histo files in the folder
     # csv_file <-
@@ -89,6 +89,22 @@ gpe3_error_polys <-
     
     out_polys <- error_polys %>% bind_rows()
     
+    if(aggregate){
+      if(verbose){
+        message("Aggregating individual 12 hour polygons into a single one per Ptt...") 
+      }
+      try(
+        {sf::sf_use_s2(FALSE)
+          out_polys <-
+            out_polys %>%
+            st_make_valid() %>%
+            group_by(Ptt) %>%
+            summarise(do_union = T) %>%
+            st_as_sf()
+          sf::sf_use_s2(TRUE)},
+        silent = TRUE)
+    }
+    
     return(out_polys)
     
   }
@@ -121,7 +137,15 @@ gpe3_error_polys <-
 #                   alwaysShowDate = TRUE,
 #                   sameDate = TRUE,
 #                   follow = TRUE))
- 
+
+sf::sf_use_s2(FALSE)
+pol_sum <-
+  pols %>% 
+  st_make_valid() %>%
+  group_by(Ptt) %>%
+  summarise(do_union = T) %>% 
+  st_as_sf()
+sf::sf_use_s2(TRUE)
 
 
 
