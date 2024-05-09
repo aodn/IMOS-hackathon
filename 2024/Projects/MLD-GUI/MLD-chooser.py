@@ -18,6 +18,7 @@ import PickleStuff as ps # functions to save/load pickle files
 import numpy as np
 import pandas as pd
 from datetime import datetime
+import gsw
 
 # %% ----------------------------------------------------------------------------
 # Function to get season from datetime64
@@ -38,10 +39,9 @@ def get_season(date):
 
 PSAL = ps.PickleLoad('Data\PH100CTD_PSAL.pickle')
 TEMP = ps.PickleLoad('Data\PH100CTD_TEMP.pickle')
-DENS = ps.PickleLoad('Data\PH100CTD_DENS.pickle')
 
 # example profiles for testing
-nprofs = 3
+nprofs = 10
 un_t = np.unique(PSAL['PH100']['PSAL'].TIME.values)
 random_selection = np.random.choice(un_t, size=nprofs)
 
@@ -52,17 +52,36 @@ dates = []
 times = []
 seasons = []
 
+lon = TEMP['PH100']['TEMP'].LONGITUDE.median()
+lat = TEMP['PH100']['TEMP'].LATITUDE.median()
+
 for n in range(len(random_selection)):
     c = PSAL['PH100']['PSAL'].TIME.values == random_selection[n]
     
     # Combine arrays into tuples
     TEMP_tuple = (TEMP['PH100']['TEMP'].DEPTH.values[c], TEMP['PH100']['TEMP'].values[c])
     PSAL_tuple = (PSAL['PH100']['PSAL'].DEPTH.values[c], PSAL['PH100']['PSAL'].values[c])
-    DENS_tuple = (DENS['PH100']['DENS'].DEPTH.values[c], DENS['PH100']['DENS'].values[c])
 
-    
+    # QC the data set
+    TEMP_QC = TEMP['PH100']['TEMP_quality_control'].values[c];
+    TEMP_tuple[1][TEMP_QC != 1] = np.nan
+    PSAL_QC = PSAL['PH100']['PSAL_quality_control'].values[c];
+    PSAL_tuple[1][PSAL_QC != 1] = np.nan
+
     temperature_profiles.append(TEMP_tuple)
     salinity_profiles.append(PSAL_tuple)
+    
+    # calculate density
+    lon_arr = np.ones(len(salinity_profiles[n][1]))*lon.values
+    lat_arr = np.ones(len(salinity_profiles[n][1]))*lat.values
+    SA = gsw.SA_from_SP(salinity_profiles[n][1],
+                          salinity_profiles[n][0],
+                          lon_arr,lat_arr)
+    CT = gsw.CT_from_t(SA,temperature_profiles[n][1],temperature_profiles[n][0])
+    rho = gsw.rho(SA,CT,temperature_profiles[n][0])
+
+    DENS_tuple = (temperature_profiles[n][0],rho)
+    
     density_profiles.append(DENS_tuple)
     
     # get other information
@@ -85,10 +104,17 @@ site = 'PH100'
 # %% ----------------------------------------------------------------------------
 
 class OceanProfileGUI:
-    def __init__(self, root, temperature_profiles, salinity_profiles, density_profiles, dates, times, seasons, site):
+    def __init__(self, root, temperature_profiles, salinity_profiles, density_profiles, dates, times, seasons, site,
+                 tmin=10, tmax=27, smin=33, smax=36, dmin=1022, dmax=1027):
         self.root = root
         self.root.title("Ocean Profile Analysis")
 
+        self.tmin = tmin
+        self.tmax = tmax
+        self.smin = smin
+        self.smax = smax
+        self.dmin = dmin
+        self.dmax = dmax
         self.site = site
         self.dates = dates
         self.times = times
@@ -131,7 +157,7 @@ class OceanProfileGUI:
 
         # Plot temperature data
         depth, temperature = self.temperature_profiles[self.current_profile_index]
-        self.plot_area.plot(temperature, depth, label='Temperature (°C)')
+        temperature_plot = self.plot_area.plot(temperature, depth, label='Temperature (°C)')
         self.plot_area.set_xlabel("Temperature (°C)")
         self.plot_area.set_ylabel("Depth (m)")
         
@@ -156,18 +182,25 @@ class OceanProfileGUI:
         # Plot salinity data on secondary y-axis
         depth, salinity = self.salinity_profiles[self.current_profile_index]
         salinity_axis = self.plot_area.twiny()
-        salinity_axis.plot(salinity, depth, label='Salinity', color='orange')
-        salinity_axis.set_xlabel("Salinity")
-
+        salinity_axis.plot(salinity, depth, label='Salinity', color=(217/255,95/255,2/255))
+        salinity_axis.set_xlabel("Salinity", color=(217/255,95/255,2/255))
+        salinity_axis.set_xlim(self.smin, self.smax) 
+        
         # Plot density data on secondary y-axis, slightly higher than salinity axis
         depth, density = self.density_profiles[self.current_profile_index]
         density_axis = self.plot_area.twiny()
-        density_axis.plot(density, depth, label='Density', color='green')
-        density_axis.set_xlabel("Density [kg m-3]")
-        density_axis.spines['top'].set_position(('outward', 30))  # Adjust the position of the density axis
+        density_axis.plot(density, depth, label='Density', color=(117/255,112/255,179/255))
+        density_axis.set_xlabel("Density [kg m-3]", color=(117/255,112/255,179/255))
+        density_axis.spines['top'].set_position(('outward', 40))  # Adjust the position of the density axis
+        density_axis.set_xlim(self.dmin, self.dmax) 
+        
+        # Set temperature x-axis label color to match temperature plot
+        temperature_xaxis = self.plot_area.xaxis
+        temperature_xaxis.label.set_color(temperature_plot[0].get_color())
+        temperature_xaxis.set_view_interval(self.tmin, self.tmax)   
 
         # Combine the legends
-        self.plot_area.legend(loc='upper right')
+        # self.plot_area.legend(loc='upper right')
 
         self.plot_area.grid(True)  # Add grid lines
 
@@ -175,6 +208,10 @@ class OceanProfileGUI:
         # Record the last clicked depth if available before moving to the next profile
         if self.selected_depth is not None:
             self.recorded_depths.append(self.selected_depth)
+            
+        # Clear the current figure and plot area
+        self.fig.clear()
+        self.plot_area = self.fig.add_subplot(111)
 
         # Load and plot the next profile if not all profiles have been displayed
         if self.current_profile_index < self.num_profiles - 1:
