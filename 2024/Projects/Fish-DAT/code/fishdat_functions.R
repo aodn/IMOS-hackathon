@@ -295,7 +295,7 @@ histoplot <- function(tag_ids = c("47618"),
         group_by(species, bin, variable) %>%
         summarise(
           prop_mean = mean(prop, na.rm = TRUE),
-          prop_sd = sd(prop, na.rm = TRUE),
+          prop_se = sd(prop, na.rm = TRUE)/sqrt(n()),
           id = id[1]
         ) %>%
         ungroup() %>%
@@ -313,7 +313,7 @@ histoplot <- function(tag_ids = c("47618"),
       group_by(id, bin, variable) %>%
       summarise(
         prop_mean = mean(prop, na.rm = TRUE),
-        prop_sd = sd(prop, na.rm = TRUE)
+        prop_se = sd(prop, na.rm = TRUE)/sqrt(n())
       ) %>%
       ungroup()
 
@@ -347,8 +347,8 @@ histoplot <- function(tag_ids = c("47618"),
         ) +
         geom_errorbar(
           aes(
-            xmin = prop_mean - prop_sd,
-            xmax = prop_mean + prop_sd
+            xmin = prop_mean - prop_se,
+            xmax = prop_mean + prop_se
           ),
           colour = "grey50",
           width = 0.3
@@ -401,8 +401,8 @@ histoplot <- function(tag_ids = c("47618"),
         ) +
         geom_errorbar(
           aes(
-            xmin = prop_mean - prop_sd,
-            xmax = prop_mean + prop_sd
+            xmin = prop_mean - prop_se,
+            xmax = prop_mean + prop_se
           ),
           colour = "grey50",
           width = 0.3

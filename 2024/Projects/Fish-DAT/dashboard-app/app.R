@@ -7,6 +7,7 @@ library(leaflet)
 library(dplyr)
 library(ggplot2)
 library(shinydashboard)
+library(terra)
 # library(plotly)
 # library(shinyjs)
 # library(logging)
@@ -168,6 +169,8 @@ server <- function(input, output, session) {
 
     if (is.null(trackData) == FALSE) {
       track_sf <- trackData$track_sf
+      error_pols <- trackData$error_polys
+      fish_ras <- rast(trackData$fish_dat[c(2,1,3)], type = "xyz", crs = 'epsg:4326')
 
       mytext <- paste(
         "Date: ", track_sf$`Date`, "<br/>",
@@ -178,6 +181,8 @@ server <- function(input, output, session) {
         sep = ""
       ) %>%
         lapply(htmltools::HTML)
+      
+      fish_pal <- colorNumeric("viridis", values(fish_ras), na.color = "transparent")
 
 
       leaflet() %>%
@@ -196,17 +201,35 @@ server <- function(input, output, session) {
           label = mytext,
           layerId = track_sf$`Date`
         ) %>%
-        addLayersControl(
-          baseGroups = c("Satellite", "Map"),
-          overlayGroups = as.character(unique(track_sf$month)),
-          options = layersControlOptions(collapsed = FALSE)
-        ) %>%
+        addPolygons(
+          data = error_pols,
+          stroke = T, weight = 1, color = "grey",
+          fillOpacity = 0.15, fillColor = "lightgrey",
+          labelOptions = labelOptions(noHide = TRUE)
+        ) %>% 
+        addRasterImage(
+          x = fish_ras, 
+          opacity = 0.5,
+          color = fish_pal,
+          layerId = "Fishing effort", group = "Fishing effort"
+        ) %>% 
+        addLegend(pal = fish_pal, values = values(fish_ras), 
+                  title = "Fishing<br>effort (h)", layerId = "Fishing effort",
+                  position = "bottomright", opacity = 1, group = "Fishing effort"
+        ) %>% 
         addLegend(
-          position = "bottomright",
+          position = "bottomleft",
           colors = unique(track_sf$colour), labels = unique(track_sf$month),
           title = "Month:",
           opacity = 1
-        )
+        ) %>%
+        addLayersControl(
+          overlayGroups = c("Fishing effort"),
+          # baseGroups = as.character(unique(track_sf$month)),
+          baseGroups = c("Satellite", "Map"),
+          options = layersControlOptions(collapsed = FALSE)
+        ) %>% 
+        hideGroup("Fishing")
     } else {
       leaflet() %>% addProviderTiles(providers$Esri.WorldImagery)
     }
@@ -253,3 +276,4 @@ server <- function(input, output, session) {
 
 # Run the application
 shinyApp(ui = ui, server = server)
+
