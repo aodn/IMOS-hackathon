@@ -1,4 +1,5 @@
-## Boilerplate code created by ChatGPT
+## Fish tracking dashboard 
+## Authors: Dahlia Foo, Dave Green, ChatGPT
 
 library(shiny)
 library(shinyWidgets)
@@ -6,42 +7,32 @@ library(leaflet)
 library(dplyr)
 library(ggplot2)
 library(shinydashboard)
+# library(plotly)
 # library(shinyjs)
 # library(logging)
+library(ggiraph)
 
+source(list.files(pattern="dashboard_setup.R", recursive=TRUE))
 
-# Get choices for species and tag ID
-basedir <- "../data/"
-metadata <- read_csv(paste0(basedir, "HackathonMetadata.csv"))
-
-# detect numeric dir filenames
-tag_ids <- metadata$PTT_ID
+# Set the relative path to the data folder
+base_folder <- ".."
+tag_ids <- metadata$Ptt
 species_id <- metadata$Species %>% unique()
 
-# # construct file path
-# fn <- list.files(paste0(basedir, dirs[1]), pattern = "daily-positions.csv", full.names = TRUE)
-
 # Define UI
-
-
 header <- dashboardHeader(
   title = "Fish Tracking Dashboard"
 )
 
 sidebar <- dashboardSidebar(
   disable = TRUE
-  # sidebarMenu(
-  #   menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
-  #   menuItem("Visualizations", tabName = "visualizations", icon = icon("bar-chart-o")),
-  #   menuItem("Maps", tabName = "maps", icon = icon("map"))
-  # )
 )
 
 body <- dashboardBody(
   titlePanel("Fish Tracking Dashboard"),
   fluidRow(
     column(
-      width = 4,
+      width = 2,
       pickerInput("species", "Species:",
         choices = c("all", species_id),
         options = list(`actions-box` = TRUE),
@@ -58,7 +49,7 @@ body <- dashboardBody(
       infoBoxOutput("detachmentLocation", width = NULL),
     ),
     column(
-      width = 8,
+      width = 10,
       leafletOutput("map", height = "400px"),
       # Insert attribution
       tags$a(
@@ -67,20 +58,15 @@ body <- dashboardBody(
       ),
       fluidRow(
         column(
-          width = 8
-          ),
+          width = 6,
+          plotOutput("envPlot", height = "150px")
+        ),
         column(
-          width = 4,
+          width = 6,
           plotOutput("divePlot")
-          )
         )
+      )
     ),
-    
-    # column(
-    #   width = 4,
-    #   plotOutput("divePlot"),
-    #   plotOutput("behaviourPlot")
-    # )
   )
 )
 
@@ -98,12 +84,12 @@ server <- function(input, output, session) {
 
     if (input$species == "all") {
       validTags <- metadata %>%
-        pull(PTT_ID) %>%
+        pull(Ptt) %>%
         unique()
     } else {
       validTags <- metadata %>%
         filter(Species %in% input$species) %>%
-        pull(PTT_ID) %>%
+        pull(Ptt) %>%
         unique()
     }
 
@@ -113,7 +99,7 @@ server <- function(input, output, session) {
   # infoBoxes
   output$totalLength <- renderInfoBox({
     req(input$tagID)
-    data <- metadata[metadata$PTT_ID == input$tagID, ]
+    data <- metadata[metadata$Ptt == input$tagID, ]
     infoBox(
       title = "Total Length",
       value = paste0(data$TotalLength, "cm"),
@@ -124,7 +110,7 @@ server <- function(input, output, session) {
 
   output$deploymentDate <- renderInfoBox({
     req(input$tagID)
-    data <- metadata[metadata$PTT_ID == input$tagID, ]
+    data <- metadata[metadata$Ptt == input$tagID, ]
     infoBox(
       title = "Deployment Date",
       value = data$Deployment_Date,
@@ -135,7 +121,7 @@ server <- function(input, output, session) {
 
   output$detachmentDate <- renderInfoBox({
     req(input$tagID)
-    data <- metadata[metadata$PTT_ID == input$tagID, ]
+    data <- metadata[metadata$Ptt == input$tagID, ]
     infoBox(
       title = "Detachment Date",
       value = data$Detachment_Date,
@@ -146,7 +132,7 @@ server <- function(input, output, session) {
 
   output$deploymentLocation <- renderInfoBox({
     req(input$tagID)
-    data <- metadata[metadata$PTT_ID == input$tagID, ]
+    data <- metadata[metadata$Ptt == input$tagID, ]
     text <- paste(data$Deployment_Location, round(data$Deployment_Lat, 2), round(data$Deployment_Lon, 2), sep = ", ")
     infoBox(
       title = "Deployment Location",
@@ -158,7 +144,7 @@ server <- function(input, output, session) {
 
   output$detachmentLocation <- renderInfoBox({
     req(input$tagID)
-    data <- metadata[metadata$PTT_ID == input$tagID, ]
+    data <- metadata[metadata$Ptt == input$tagID, ]
     text <- paste(round(data$Detachment_Lat, 2), round(data$Detachment_Lon, 2), sep = ", ")
     infoBox(
       title = "Detachment Location",
@@ -169,39 +155,26 @@ server <- function(input, output, session) {
   })
 
 
+  trackData <- reactive({
+    req(input$tagID)
+    load_track_data(input$tagID, base_folder, monthly_colour_palette)
+  })
+
+
   # Reactive expression to manage map data processing
   mapData <- reactive({
-    req(input$tagID) # Ensure tagID is selected
+    req(trackData())
+    trackData <- trackData()
 
-
-    files <- list.files(basedir, pattern = paste0(input$tagID, "_daily-positions.csv"), full.names = TRUE, recursive = TRUE)
-
-
-    if (length(files) > 0) {
-      track <- read_csv(files[1])
-
-      # Create a custom color scale
-      monthly_colour_palette <- read_csv(paste0(
-        basedir, "monthly_colour_palette.csv"
-      ))
-      head(monthly_colour_palette)
-      myColors <- unique(monthly_colour_palette$colour)
-      myColors <- setNames(myColors, unique(monthly_colour_palette$month))
-      colScale <- scale_colour_manual(name = "Month:", values = myColors)
-
-      # Assign colour depending on month
-      track <- inner_join(track, monthly_colour_palette, by = "month") # automatically assign colour as new column based on our colour palette
-      track <- as.data.frame(track)
-
-      track_sf <- track %>%
-        st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326, remove = F)
+    if (is.null(trackData) == FALSE) {
+      track_sf <- trackData$track_sf
 
       mytext <- paste(
-        "Date: ", track$`Date`, "<br/>",
-        "Ptt: ", track$Ptt, "<br/>",
-        "Days at liberty: ", track$`day.at.liberty`, "<br/>",
-        "Longitude: ", track$Longitude, "<br/>",
-        "Latitude: ", track$Latitude,
+        "Date: ", track_sf$`Date`, "<br/>",
+        "Ptt: ", track_sf$Ptt, "<br/>",
+        "Days at liberty: ", track_sf$`day.at.liberty`, "<br/>",
+        "Longitude: ", track_sf$Longitude, "<br/>",
+        "Latitude: ", track_sf$Latitude,
         sep = ""
       ) %>%
         lapply(htmltools::HTML)
@@ -220,7 +193,8 @@ server <- function(input, output, session) {
           weight = 2, radius = 4, color = track_sf$colour,
           stroke = FALSE, fillOpacity = 1,
           group = track_sf$month,
-          label = mytext
+          label = mytext,
+          layerId = track_sf$`Date`
         ) %>%
         addLayersControl(
           baseGroups = c("Satellite", "Map"),
@@ -238,61 +212,43 @@ server <- function(input, output, session) {
     }
   })
 
+
   # Render the map from the reactive expression
   output$map <- renderLeaflet({
     mapData() # This will only recompute when input$tagID changes or when the data changes
   })
 
-  # # Sample data - replace this with your actual dataset
-  # data <- reactive({
-  #   # Simulate filtering based on inputs
-  #   df <- data.frame(
-  #     Species = sample(c("Species 1", "Species 2"), 100, replace = TRUE),
-  #     TagID = sample(c("ID 1", "ID 2"), 100, replace = TRUE),
-  #     Date = seq(as.Date("2020-01-01"), as.Date("2020-01-01") + 99, by = "day"),
-  #     Longitude = rnorm(100, mean = -20),
-  #     Latitude = rnorm(100, mean = 50),
-  #     DiveDepth = rnorm(100, mean = 200, sd = 50),
-  #     Behaviour = rnorm(100)
-  #   )
-  #   df <- df[df$Species %in% input$species & df$TagID %in% input$tagID, ]
-  #   df
-  # })
-  #
-  # # Information box output
-  # output$infoBox <- renderPrint({
-  #   if (nrow(data()) > 0) {
-  #     paste(
-  #       "Tag ID:", unique(data()$TagID),
-  #       "\nRelease Date: 2020-01-01", # Placeholder
-  #       "\nPop Off Date: 2020-12-31", # Placeholder
-  #       "\nDays at Liberty:", 365
-  #     ) # Placeholder
-  #   } else {
-  #     "No data available"
-  #   }
-  # })
-  #
-  # # Plot for individual fish
-  # output$fishPlot <- renderPlot({
-  #   ggplot(data(), aes(x = Date, y = DiveDepth)) +
-  #     geom_line() +
-  #     theme_minimal() +
-  #     labs(title = "Dive Profile Over Time", x = "Date", y = "Depth (m)")
-  # })
-  #
+  # Generate highlightData in reactive instead
+  highlightData <- reactive({
+    req(trackData())
+    click <- input$map_marker_mouseover$id
+    trackData <- trackData()
+    track_sf <- trackData$track_sf
+    track_sf[track_sf$`Date` == click, ]
+  })
+
+  # Plot for individual fish
+  output$envPlot <- renderPlot({
+
+    track <- trackData()$track
+    
+    is_highlighted <- nrow(highlightData()) > 0
+
+    ggplot(track, aes(x = Date)) +
+      geom_path(aes(y = MeanTempPDT), color = track$colour, na.rm = TRUE) +
+      geom_path(aes(y = MinTemp), linetype = "dashed", na.rm = TRUE) +
+      geom_path(aes(y = MaxTemp), linetype = "dashed", na.rm = TRUE) +
+      theme_minimal() +
+      list(if(is_highlighted) geom_point(data = highlightData(), aes(x = Date, y = MeanTempPDT), color = "red"))
+  })
+
   # Bar plot of dive depth
   output$divePlot <- renderPlot({
-    histoplot(tag_ids = as.character(input$tagID), folder_path = basedir)
+    if(is_empty(input$tagID)) return()
+    histoplot(tag_ids = as.character(input$tagID), folder_path = "../data")
   })
-  #
-  # # Scatter plot of fish behaviour variable
-  # output$behaviourPlot <- renderPlot({
-  #   ggplot(data(), aes(x = Date, y = Behaviour)) +
-  #     geom_point(alpha = 0.6, color = "red") +
-  #     theme_minimal() +
-  #     labs(title = "Fish Behaviour Over Time", x = "Date", y = "Behaviour")
-  # })
+
+ 
 }
 
 # Run the application
