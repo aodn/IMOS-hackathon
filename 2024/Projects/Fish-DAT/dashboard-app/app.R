@@ -30,7 +30,7 @@ sidebar <- dashboardSidebar(
 )
 
 body <- dashboardBody(
-  titlePanel("Fish Tracking Dashboard"),
+  # titlePanel("Fish Tracking Dashboard"),
   fluidRow(
     column(
       width = 2,
@@ -51,23 +51,27 @@ body <- dashboardBody(
     ),
     column(
       width = 10,
-      leafletOutput("map", height = "400px"),
+      leafletOutput("map", height = "350px"),
       # Insert attribution
-      tags$a(
-        href = "https://www.globalfishingwatch.org",
-        "Powered by Global Fishing Watch"
-      ),
+      tags$span(
+        "(Fishing data sourced from ",
+        tags$a(
+          href = "https://www.globalfishingwatch.org",
+          "Global Fishing Watch"
+          ), ")",
+        style = "font-size: 10px;"
+        ),
       fluidRow(
         column(
           width = 6,
-          plotOutput("envPlot", height = "150px")
+          plotOutput("envPlot", height = "350px")
         ),
         column(
           width = 6,
-          plotOutput("divePlot")
+          plotOutput("divePlot", height = "350px")
         )
       )
-    ),
+    )
   )
 )
 
@@ -102,7 +106,7 @@ server <- function(input, output, session) {
     req(input$tagID)
     data <- metadata[metadata$Ptt == input$tagID, ]
     infoBox(
-      title = "Total Length",
+      title = HTML("Total<br>Length"),
       value = paste0(data$TotalLength, "cm"),
       icon = icon("ruler"),
       color = "blue"
@@ -113,8 +117,8 @@ server <- function(input, output, session) {
     req(input$tagID)
     data <- metadata[metadata$Ptt == input$tagID, ]
     infoBox(
-      title = "Deployment Date",
-      value = data$Deployment_Date,
+      title = HTML("Tagging<br> Date"),
+      value = format(data$Deployment_Date, "%d\n%b\n%Y"),
       icon = icon("calendar-plus"),
       color = "green"
     )
@@ -124,8 +128,8 @@ server <- function(input, output, session) {
     req(input$tagID)
     data <- metadata[metadata$Ptt == input$tagID, ]
     infoBox(
-      title = "Detachment Date",
-      value = data$Detachment_Date,
+      title = HTML("Pop-off<br>Date"),
+      value = format(data$Detachment_Date, "%d\n%b\n%Y"),
       icon = icon("calendar-minus"),
       color = "red"
     )
@@ -134,9 +138,11 @@ server <- function(input, output, session) {
   output$deploymentLocation <- renderInfoBox({
     req(input$tagID)
     data <- metadata[metadata$Ptt == input$tagID, ]
-    text <- paste(data$Deployment_Location, round(data$Deployment_Lat, 2), round(data$Deployment_Lon, 2), sep = ", ")
+    text <- paste(
+      # data$Deployment_Location, 
+      round(data$Deployment_Lat, 2), round(data$Deployment_Lon, 2), sep = ", ")
     infoBox(
-      title = "Deployment Location",
+      title = HTML("Tagging<br>Location"),
       value = text,
       icon = icon("map-marker"),
       color = "green"
@@ -148,7 +154,7 @@ server <- function(input, output, session) {
     data <- metadata[metadata$Ptt == input$tagID, ]
     text <- paste(round(data$Detachment_Lat, 2), round(data$Detachment_Lon, 2), sep = ", ")
     infoBox(
-      title = "Detachment Location",
+      title = HTML("Pop-off<br>Location"),
       value = text,
       icon = icon("map-marker"),
       color = "red"
@@ -182,29 +188,29 @@ server <- function(input, output, session) {
       ) %>%
         lapply(htmltools::HTML)
       
-      fish_pal <- colorNumeric("viridis", values(fish_ras), na.color = "transparent")
+      fish_pal <- colorNumeric("Reds", values(fish_ras),  na.color = "transparent")
 
 
       leaflet() %>%
         addProviderTiles(providers$Esri.WorldImagery, group = "Satellite") %>%
         addProviderTiles(providers$OpenStreetMap, group = "Map") %>%
-        addPolylines(
-          lng = track_sf$Longitude, lat = track_sf$Latitude,
-          color = "white", weight = 1.5,
-          labelOptions = labelOptions(noHide = TRUE)
-        ) %>%
-        addPolygons(
-          data = error_pols,
-          stroke = T, weight = 1, color = "grey",
-          fillOpacity = 0.15, fillColor = "lightgrey",
-          labelOptions = labelOptions(noHide = TRUE)
-        ) %>% 
         addRasterImage(
           x = fish_ras, 
           opacity = 0.5,
           color = fish_pal,
           layerId = "Fishing effort", group = "Fishing effort"
         ) %>% 
+        addPolygons(
+          data = error_pols,
+          stroke = T, weight = 1, color = "grey",
+          fillOpacity = 0.15, fillColor = "lightgrey",
+          labelOptions = labelOptions(noHide = TRUE)
+        )  %>% 
+        addPolylines(
+          lng = track_sf$Longitude, lat = track_sf$Latitude,
+          color = "white", weight = 1.5,
+          labelOptions = labelOptions(noHide = TRUE)
+        ) %>%
         addCircleMarkers(
           lng = track_sf$Longitude, lat = track_sf$Latitude,
           weight = 2, radius = 4, color = track_sf$colour,
@@ -215,7 +221,8 @@ server <- function(input, output, session) {
         ) %>%
         addLegend(pal = fish_pal, values = values(fish_ras), 
                   title = "Fishing<br>effort (h)", layerId = "Fishing effort",
-                  position = "bottomright", opacity = 1, group = "Fishing effort"
+                  position = "bottomright", opacity = 1, group = "Fishing effort",
+                  className = "custom-leaflet-legend"
         ) %>% 
         addLegend(
           position = "bottomleft",
@@ -229,7 +236,8 @@ server <- function(input, output, session) {
           baseGroups = c("Satellite", "Map"),
           options = layersControlOptions(collapsed = FALSE)
         ) %>% 
-        hideGroup("Fishing")
+        hideGroup("Fishing effort")
+      
     } else {
       leaflet() %>% addProviderTiles(providers$Esri.WorldImagery)
     }
@@ -254,13 +262,14 @@ server <- function(input, output, session) {
   output$envPlot <- renderPlot({
 
     track <- trackData()$track
-    
+
     is_highlighted <- nrow(highlightData()) > 0
 
     ggplot(track, aes(x = Date)) +
+      geom_ribbon(aes(ymin = MinTemp, ymax = MaxTemp), fill = "grey", col = NA, alpha = 0.5) +
       geom_path(aes(y = MeanTempPDT), color = track$colour, na.rm = TRUE) +
-      geom_path(aes(y = MinTemp), linetype = "dashed", na.rm = TRUE) +
-      geom_path(aes(y = MaxTemp), linetype = "dashed", na.rm = TRUE) +
+      geom_path(aes(y = MinTemp), linetype = 3, col = "grey60", na.rm = TRUE) +
+      geom_path(aes(y = MaxTemp), linetype = 3, col = "grey60", na.rm = TRUE) +
       theme_minimal() +
       list(if(is_highlighted) geom_point(data = highlightData(), aes(x = Date, y = MeanTempPDT), color = "red"))
   })
@@ -270,10 +279,55 @@ server <- function(input, output, session) {
     if(is_empty(input$tagID)) return()
     histoplot(tag_ids = as.character(input$tagID), folder_path = "../data")
   })
-
  
+  ## Plot for individual fish
+  # output$envPlot <- renderPlot({
+  #   if(is_empty(input$tagID)) return()
+  #   
+  #   h <- histoviz("../data")
+  #   
+  #   ## summarise variables to larger time steps (daily) so it plots nicer
+  #   h_summary <-
+  #     h %>%
+  #     filter(id %in% input$tagID) %>% 
+  #     mutate(date = date(date)) %>% 
+  #     group_by(id, date, bin, variable) %>% 
+  #     summarise(prop = mean(prop))
+  #   
+  #   a <-
+  #     h_summary %>% 
+  #     filter(variable %in% "depth") %>% 
+  #     ggplot(aes(x = date, y = fct_rev(bin), fill = prop, id = variable)) +
+  #     geom_tile() +
+  #     scale_x_date(expand = c(0,0)) +
+  #     scale_fill_viridis_c(direction = -1, na.value = NA, limits = c(0,100)) +
+  #     labs(x = "Date", y = "Depth (m)", fill = "Proportion\nof time") +
+  #     theme_bw()
+  #   
+  #   b <- 
+  #     h_summary %>% 
+  #     filter(variable %in% "temp") %>% 
+  #     ggplot(aes(x = date, y = bin, fill = prop, id = variable)) +
+  #     geom_tile() +
+  #     scale_x_date(expand = c(0,0)) +
+  #     scale_fill_viridis_c(option = "A", direction = -1, na.value = NA, limits = c(0,100)) +
+  #     labs(x = "Date", y = "Temperature (˚C)", fill = "Proportion\nof time") +
+  #     theme_bw()
+  #   
+  #   a/b
+  # })
+  
 }
 
 # Run the application
-shinyApp(ui = ui, server = server)
+shinyApp(ui = fluidPage(
+  tags$style("
+    .custom-leaflet-legend {
+      max-height: 200px; /* Adjust the maximum height as needed */
+      overflow-y: auto; /* Add scrollbar if content exceeds maximum height */
+      background-color: rgba(255, 255, 255, 0.8); /* Adjust the opacity value (0.8 in this example) */
+      border: 1px solid #ccc; /* Add border to mimic the default legend shape */
+      border-radius: 4px; /* Add border radius to mimic the default legend shape */
+      padding: 5px; /* Add padding to ensure proper spacing */
+   }"), ui), server = server)
 
