@@ -317,7 +317,6 @@ histoplot <- function(tag_ids = c("47618"),
       ) %>%
       ungroup()
 
-
     # Time at Temperature plots
 
     if (TAT) { # do we want it plotted?
@@ -382,7 +381,7 @@ histoplot <- function(tag_ids = c("47618"),
       if (species) {
         TAD_dat <- plot_dat %>%
           filter(variable == "depth")
-
+        
         spec_TAD <- spec_dat %>%
           filter(variable == "depth") %>%
           select(-id) %>%
@@ -448,20 +447,16 @@ histoplot <- function(tag_ids = c("47618"),
 ## (it only requires the path to the folder where -Histo files are found)
 
 histoviz <- function(folder_path) {
+  
+
   ## parse all the histo files in the folder
   file_names <-
     list.files(folder_path,
-      pattern = "^[0-9]+$",
-      full.names = T
-    ) %>%
-    map(function(x) {
-      list.files(x,
-        pattern = "*Histos.csv",
-        full.names = T
-      )
-    }) %>%
-    unlist()
-
+               pattern = "Histos.csv",
+               full.names = T,
+               recursive = T
+    ) 
+  
   ### Lets work with the first histo file.. this can be looped across all
   # the files in histos
   fn <- function(file_names) {
@@ -533,7 +528,7 @@ histoviz <- function(folder_path) {
       dplyr::select(-Bins)
 
     combdat <- bind_rows(depth_dat, temp_dat)
-
+    
     return(combdat)
   }
   
