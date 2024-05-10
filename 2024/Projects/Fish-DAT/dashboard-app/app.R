@@ -193,14 +193,6 @@ server <- function(input, output, session) {
           color = "white", weight = 1.5,
           labelOptions = labelOptions(noHide = TRUE)
         ) %>%
-        addCircleMarkers(
-          lng = track_sf$Longitude, lat = track_sf$Latitude,
-          weight = 2, radius = 4, color = track_sf$colour,
-          stroke = FALSE, fillOpacity = 1,
-          group = track_sf$month,
-          label = mytext,
-          layerId = track_sf$`Date`
-        ) %>%
         addPolygons(
           data = error_pols,
           stroke = T, weight = 1, color = "grey",
@@ -213,6 +205,14 @@ server <- function(input, output, session) {
           color = fish_pal,
           layerId = "Fishing effort", group = "Fishing effort"
         ) %>% 
+        addCircleMarkers(
+          lng = track_sf$Longitude, lat = track_sf$Latitude,
+          weight = 2, radius = 4, color = track_sf$colour,
+          stroke = FALSE, fillOpacity = 1,
+          group = track_sf$month,
+          label = mytext,
+          layerId = track_sf$`Date`
+        ) %>%
         addLegend(pal = fish_pal, values = values(fish_ras), 
                   title = "Fishing<br>effort (h)", layerId = "Fishing effort",
                   position = "bottomright", opacity = 1, group = "Fishing effort"
