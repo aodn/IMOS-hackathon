@@ -108,7 +108,23 @@ body <- layout_columns(
 )
 
 
-ui <- page_sidebar(title = div("Fish tracking dashboard", tags$span(textOutput("active_individual"), style = "font-size: 10px;")), sidebar = sidebar, body)
+ui <- page_sidebar(
+  title = div("Fish tracking dashboard", 
+              tags$span(textOutput("active_individual"), style = "font-size: 10px;")), 
+  sidebar = sidebar, 
+  body, 
+  theme = bs_theme(
+    bootswatch = "sketchy",
+    version = 5,
+    base_font = font_google("Cabin Sketch"),
+    "font-size-base" = "0.75rem"
+  ) %>%
+    bs_add_rules(
+      list(
+        sass::sass_file("www/custom.scss")
+      )
+    )
+)
 
 
 
@@ -214,8 +230,6 @@ server <- function(input, output, session) {
   mapData <- reactive({
     req(trackData())
     trackData <- trackData()
-    
-    print(trackData()$track)
 
     if (is.null(trackData) == FALSE) {
       track_sf <- trackData$track_sf
@@ -327,7 +341,6 @@ server <- function(input, output, session) {
   # Plot for individual fish
   output$envPlot2 <- renderPlot({
     track <- trackData()$track
-    print(track)
 
     if (input$show_active_date) is_highlighted <- nrow(highlightData()) > 0
 

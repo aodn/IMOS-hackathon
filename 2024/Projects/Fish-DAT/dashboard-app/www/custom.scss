@@ -6,19 +6,9 @@
       border-radius: 4px; /* Add border radius to mimic the default legend shape */
       padding: 5px; /* Add padding to ensure proper spacing */
 }
-            
-.info-box > * {
-    margin: 0;
-    flex-basis: 15ch;
-    flex-grow: 1;
-}
 
-.info-box-icon {
-    flex-basis: 90px;
-    height:auto;
-}
-
-.info-box {
-display: flex;
-flex-wrap: wrap
+:is(.leaflet-control-layers-base, .leaflet-control-layers-overlays) > label > div {
+  display:grid;
+  grid-template-columns: 20px auto;
+  
 }
