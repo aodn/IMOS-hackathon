@@ -30,7 +30,9 @@ sidebar <- dashboardSidebar(
 )
 
 body <- dashboardBody(
-  # titlePanel("Fish Tracking Dashboard"),
+  tags$head(
+    tags$link(rel = "stylesheet", type = "text/css", href = "custom.css")
+  ),
   fluidRow(
     column(
       width = 2,
@@ -262,6 +264,7 @@ server <- function(input, output, session) {
   output$envPlot <- renderPlot({
 
     track <- trackData()$track
+    print(track)
 
     is_highlighted <- nrow(highlightData()) > 0
 
@@ -320,14 +323,5 @@ server <- function(input, output, session) {
 }
 
 # Run the application
-shinyApp(ui = fluidPage(
-  tags$style("
-    .custom-leaflet-legend {
-      max-height: 200px; /* Adjust the maximum height as needed */
-      overflow-y: auto; /* Add scrollbar if content exceeds maximum height */
-      background-color: rgba(255, 255, 255, 0.8); /* Adjust the opacity value (0.8 in this example) */
-      border: 1px solid #ccc; /* Add border to mimic the default legend shape */
-      border-radius: 4px; /* Add border radius to mimic the default legend shape */
-      padding: 5px; /* Add padding to ensure proper spacing */
-   }"), ui), server = server)
+shinyApp(ui = ui, server = server)
 
