@@ -46,11 +46,11 @@ sidebar <- sidebar(
    textOutput("deploymentPeriod")
  ),
  card(
-   card_header("Start location"),
+   card_header("Tagging location"),
    textOutput("deploymentLocation")
  ),
  card(
-   card_header("End location"),
+   card_header("Pop-off location"),
    textOutput("detachmentLocation")
  )
 )
